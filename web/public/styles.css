@@ -493,3 +493,10 @@ mark.hit { background: #f6d58a; color: inherit; border-radius: 3px; } mark.hit.c
 .why-grid > div { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; min-width: 0; }
 .why-grid h3 { font: 600 15px var(--sans); margin: 0 0 4px; }
 .why-grid p { margin: 0; }
+.why-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; margin: 14px 0 4px; font-size: 14px; }
+.why-links a { color: var(--accent); text-decoration: none; }
+.faq { text-align: left; margin-top: 18px; }
+.faq h2 { text-align: center; }
+.faq details { border-bottom: 1px solid var(--border); padding: 8px 2px; }
+.faq summary { cursor: pointer; font-weight: 600; font-size: 15px; }
+.faq p { margin: 6px 0 2px; }

@@ -322,6 +322,7 @@ document.addEventListener("visibilitychange", lockCheck);
 setInterval(lockCheck, 60_000);
 
 function start() {
+  window.rccPath?.("/app"); window.rccBeacon?.("app");   // aggregate count only (beacon.js)
   S.unsub.forEach((u) => u()); S.unsub = [];
   $("login").classList.add("hidden");
   $("app").classList.remove("hidden");

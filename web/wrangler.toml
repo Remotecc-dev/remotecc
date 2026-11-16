@@ -4,10 +4,16 @@ compatibility_date = "2026-09-01"
 workers_dev = false
 routes = [{ pattern = "remotecc.dev", custom_domain = true }]
 
-# Static files only: the app, the installer and the bridge files it downloads. No API, no data — everything lives on
-# each user's computer and travels through remotecc-relay (relay.remotecc.dev) end-to-end encrypted.
+# Static files: the app, the installer and the bridge files it downloads. No user data — everything lives on each user's
+# computer and travels through remotecc-relay (relay.remotecc.dev) end-to-end encrypted. The worker only counts visits
+# in aggregate (Analytics Engine, no cookies, no IP — see src/worker.js and /privacy).
 [assets]
 directory = "./public"
 binding = "ASSETS"
 # the worker sees /bridge/* first: release files must come back as they are (no .html → pretty-URL 307, text/plain)
-run_worker_first = ["/bridge/*"]
+# and every page (counting); plain assets (js/css/images) skip it
+run_worker_first = ["/*", "!/*.js", "!/*.css", "!/*.png", "!/*.svg"]
+
+[[analytics_engine_datasets]]
+binding = "AE"
+dataset = "remotecc_web"

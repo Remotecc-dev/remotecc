@@ -17,11 +17,12 @@ for f in $FILES; do
     *.json) "${REMOTECC_PY:-$HOME/.remotecc/venv/bin/python}" -c "import json,sys; json.load(open(sys.argv[1]))" "../bridge/$f" || { echo "$f isn't valid JSON — not released"; exit 1; } ;;
   esac
 done
+python3 pages/build.py   # content pages, sitemap.xml, llms.txt from web/pages/*.md
 rm -rf public/bridge && mkdir -p public/bridge
 for f in $FILES; do cp "../bridge/$f" public/bridge/; done
 # The web app also ships inside the signed release as web-<name>: the bridge serves it on http://127.0.0.1:7791
 # (the local option to remotecc.dev). A web-only change makes a new release that bridges take without a restart.
-WEBFILES="index.html app.js styles.css fs.js i18n.js theme.js tunnel.js vibe.js vibe-core.js vibe-guide.html logo.svg icon.png apple-touch-icon.png"
+WEBFILES="index.html app.js beacon.js styles.css fs.js i18n.js theme.js tunnel.js vibe.js vibe-core.js vibe-guide.html logo.svg icon.png apple-touch-icon.png"
 for f in $WEBFILES; do cp "public/$f" "public/bridge/web-$f"; FILES="$FILES web-$f"; done
 git -C .. log -1 --format="%h %cs" > public/bridge/VERSION
 PY="${REMOTECC_PY:-$HOME/.remotecc/venv/bin/python}"
@@ -87,3 +88,13 @@ if [[ -z "${CLOUDFLARE_API_TOKEN:-}" ]] && ! npx -y wrangler@4 whoami 2>/dev/nul
   CLOUDFLARE_API_TOKEN="$(clo-secret get CLOUDFLARE_SUPER_TOKEN)"; export CLOUDFLARE_API_TOKEN
 fi
 npx -y wrangler@4 deploy
+# IndexNow (Bing, Yandex, Seznam…; Bing feeds ChatGPT search): tell them the pages may have changed. Key file: public/b5efd5a0a4748a57a5940fe5bd2c4b80.txt
+python3 - <<'PY' || true
+import json, re, urllib.request
+urls = re.findall(r"<loc>([^<]+)</loc>", open("public/sitemap.xml").read())
+body = json.dumps({"host": "remotecc.dev", "key": "b5efd5a0a4748a57a5940fe5bd2c4b80", "keyLocation": "https://remotecc.dev/b5efd5a0a4748a57a5940fe5bd2c4b80.txt", "urlList": urls}).encode()
+r = urllib.request.urlopen(urllib.request.Request("https://api.indexnow.org/indexnow", data=body,
+    headers={"Content-Type": "application/json; charset=utf-8", "User-Agent": "remotecc-deploy"}), timeout=20)
+print("IndexNow:", r.status, len(urls), "urls")
+PY
+

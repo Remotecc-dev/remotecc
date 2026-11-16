@@ -21,4 +21,4 @@
   import { marked } from "https://cdn.jsdelivr.net/npm/marked@14.1.4/lib/marked.esm.js";
   const md = await (await fetch("/windows.md")).text();
   document.getElementById("doc").innerHTML = marked.parse(md) + '<p class="src">Markdown for agents: <a href="/windows.md">remotecc.dev/windows.md</a></p>';
-</script></body></html>
+</script><script src="/beacon.js" defer></script></body></html>

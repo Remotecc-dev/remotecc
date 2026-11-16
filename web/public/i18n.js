@@ -1,5 +1,5 @@
 // English is the default on every host; Vietnamese only via ?lang=vi or a saved localStorage clo.lang = "vi".
-// The UI is written in Vietnamese; this layer swaps whole UI strings as they reach the DOM (text nodes and
+// index.html is written in English, the strings app.js builds in Vietnamese; this layer swaps whole UI strings as they reach the DOM (text nodes and
 // title / placeholder / aria-label), plus alert / confirm / prompt. Chat content (bubbles, markdown, terminal output,
 // inputs) is never touched. Strings built in pieces are matched by the patterns below.
 const q = new URLSearchParams(location.search).get("lang");   // ?lang=en / ?lang=vi sticks for this browser
@@ -270,7 +270,7 @@ const X = {
   "Đặt mã khoá cho trình duyệt này (tuỳ chọn)": "Set a PIN for this browser (optional)", "4–6 số": "4–6 digits",
   "Khoá sau": "Lock after", "không dùng": "idle", "1 giờ": "1 hour", "4 giờ": "4 hours", "12 giờ": "12 hours", "24 giờ": "24 hours",
   "Ghép xong, quá thời gian này không dùng thì phải nhập mã mới xem được. Khoá ghép trên máy này được mã hoá bằng mã đó.": "After pairing, once idle this long the PIN is needed to see anything. This browser's pairing key is encrypted with it.",
-  "Đã khoá": "Locked", "Nhập mã khoá của trình duyệt này để mở.": "Enter this browser's PIN to unlock.", "Mã khoá": "PIN",
+  "Đã khoá": "Locked", "Nhập mã khoá của trình duyệt này để mở.": "Enter this browser's PIN to unlock.", "Mã khoá": "PIN", "Mã khoá mới": "New PIN",
   "Mở khoá": "Unlock", "Quên mã? Bỏ Mac này và ghép lại": "Forgot it? Remove this Mac and pair again", "Mã khoá trình duyệt": "Browser PIN",
   "Bỏ Mac này khỏi trình duyệt? Muốn dùng lại phải ghép lại.": "Remove this Mac from the browser? You'll need to pair again to use it.",
   "Mã khoá đang bật. Gõ: 1 = khoá ngay, 2 = đổi mã, 3 = bỏ mã khoá": "The PIN is on. Type: 1 = lock now, 2 = change PIN, 3 = remove PIN",
@@ -367,9 +367,10 @@ const P = [
 ];
 
 export function tr(s) {
-  if (!EN || !s) return s;
+  if (!s) return s;
   const lead = s.match(/^\s*/)[0], trail = s.match(/\s*$/)[0], core = s.trim();
   if (!core) return s;
+  if (!EN) return Object.hasOwn(R, core) ? lead + R[core] + trail : s;   // Vietnamese: index.html's English → Vietnamese
   if (Object.hasOwn(X, core)) return lead + X[core] + trail;
   if (!/[À-ỹĐđ]/.test(core) && !/ · trong repo Git$|k token · ~\$/.test(core)) return s;   // Vietnamese without diacritics
   for (const [re, to] of P) if (re.test(core)) return lead + core.replace(re, to) + trail;
@@ -377,6 +378,10 @@ export function tr(s) {
   for (const k of PREFIXES) if (core.startsWith(k)) return lead + X[k + " "]?.trimEnd() + " " + core.slice(k.length).trimStart() + trail;
   return s;
 }
+// index.html is written in English (what search engines and AI crawlers read without running JS); Vietnamese readers get
+// it back through the same table, reversed (first Vietnamese source wins when two share one English text)
+const R = {};
+for (const [k, v] of Object.entries(X)) if (!Object.hasOwn(R, v.trim())) R[v.trim()] = k.trim();
 const PREFIXES = Object.keys(X).filter((k) => k.endsWith(": ")).map((k) => k.trimEnd()).sort((a, b) => b.length - a.length);
 
 const SKIP = ".bubble, .md, .term-body, .btw-msg.q, pre, code, textarea, input, [contenteditable]";   // btw: the question is the user's, the answer is .md
@@ -393,8 +398,7 @@ function fixNode(n) {
 }
 
 export function startI18n() {
-  if (!EN) return;
-  document.documentElement.lang = "en";
+  document.documentElement.lang = EN ? "en" : "vi";
   fixNode(document.body);
   new MutationObserver((ms) => {
     for (const m of ms) {
@@ -403,6 +407,7 @@ export function startI18n() {
       else for (const n of m.addedNodes) fixNode(n);
     }
   }).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ATTRS });
+  if (!EN) return;
   const a = window.alert, c = window.confirm, p = window.prompt;
   window.alert = (s) => a(tr(String(s ?? "")));
   window.confirm = (s) => c(tr(String(s ?? "")));
