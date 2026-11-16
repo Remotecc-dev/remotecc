@@ -500,3 +500,4 @@ mark.hit { background: #f6d58a; color: inherit; border-radius: 3px; } mark.hit.c
 .faq details { border-bottom: 1px solid var(--border); padding: 8px 2px; }
 .faq summary { cursor: pointer; font-weight: 600; font-size: 15px; }
 .faq p { margin: 6px 0 2px; }
+.pair-app { display: block; margin-top: 10px; font-size: 13px; color: var(--accent); text-align: center; }

@@ -113,6 +113,10 @@ function askConnect(name) {
   return new Promise((resolve) => {
     $("pair-confirm-name").textContent = name || "Mac";
     $("pair-confirm").classList.remove("hidden"); showStatus();
+    // iPhone/iPad with the app: hand the same link to it (clo2:// opens AI Code Remote; every app build reads it)
+    const d = $("pair-link").value.match(/[?&#](?:pair=|d=)([A-Za-z0-9_-]+)/)?.[1];
+    $("pair-app").classList.toggle("hidden", !(d && /iPhone|iPad/.test(navigator.userAgent)));
+    if (d) $("pair-app").href = "clo2://pair?d=" + d;
     const done = (ok) => { $("pair-confirm").classList.add("hidden"); resolve(ok); };
     $("pair-yes").onclick = () => done(true); $("pair-no").onclick = () => done(false);
   });

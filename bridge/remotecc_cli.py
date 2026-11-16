@@ -1,6 +1,7 @@
 """`remotecc` — RemoteCC on this Mac, from Terminal (talks to the running bridge on 127.0.0.1 only).
 
-  remotecc pair                 show a QR code here; scan it with the AI Code Remote app (or pair over Wi-Fi / Tailscale)
+  remotecc pair [--app]         show a QR code here; scan it with a phone camera, remotecc.dev or the AI Code Remote app
+                            (--app: a clo2:// code for app versions before build 68)
   remotecc status               connection, settings, paired devices
   remotecc web [--online]       open the web app: served by this computer (http://127.0.0.1:7791), or remotecc.dev
   remotecc devices              paired devices · remotecc revoke NAME|ID  removes one
@@ -129,7 +130,7 @@ def qr_text(link):
     return out.getvalue()
 
 
-def cmd_pair():
+def cmd_pair(app=False):
     s = state()
     before = {d["id"] for d in s["devices"]}
     api("/api/pair/start", {})
@@ -139,10 +140,14 @@ def cmd_pair():
     if not link:
         sys.exit("Couldn't start pairing — is RemoteCC online on this computer? (remotecc status)")
     print(f"\nPair a phone or browser with {s.get('label') or 'this computer'}\n")
+    if app:   # AI Code Remote builds before 68 only scan clo2:// codes
+        link = "clo2://pair?d=" + link.split("d=", 1)[1]
     q = qr_text(link)
     print(q if q else "(QR needs the segno package — use the link below instead)")
     print(f"  Pairing link (paste it on https://remotecc.dev → “With a pairing link”):\n  {link}\n")
     print("  iPhone: open AI Code Remote → Scan QR code (or the Camera app). Scanning this code pairs at once.")
+    if not app:
+        print("  The app says nothing when it scans this? It's an older version: run `remotecc pair --app` for a code it reads.")
     print("  Same Wi-Fi / Tailscale: pick this computer in the app or on remotecc.dev, then type the 4-digit code in the dialog here.")
     print("  ⚠️  A paired device can run Claude Code on this computer as you. Only pair devices you own.\n")
     print("Waiting… (Ctrl-C to stop; the code expires in 5 minutes)")
@@ -281,7 +286,7 @@ def cmd_web(args):
 def main(argv):
     cmd, args = (argv[0] if argv else "help"), argv[1:]
     if cmd == "pair":
-        cmd_pair()
+        cmd_pair(app="--app" in args)
     elif cmd == "web":
         cmd_web(args)
     elif cmd == "status":
