@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><link rel="stylesheet" href="/public/styles.css"><title>vibe harness</title></head>
+<body style="padding:20px;max-width:820px">
+<!-- Local UI harness for vibe.js (python3 -m http.server in web/, open /test/harness.html). Not deployed. -->
+<div id="log" class="small muted" style="white-space:pre-wrap;min-height:120px"></div>
+<div id="composer" class="composer">
+  <div id="vibe-bar" class="vibe-bar hidden"></div>
+  <textarea id="input" rows="1" placeholder="Nhắn cho Claude Code…"></textarea>
+  <div class="composer-row">
+    <select id="compact"><option>Nén 400k</option></select>
+    <button id="vibe-btn" class="icon"></button>
+    <div id="vibe-menu" class="vibe-menu hidden"></div>
+    <span class="grow" style="flex:1"></span>
+    <button class="send">↑</button>
+  </div>
+</div>
+<script type="module">
+  import { createVibe, handIcon } from "/public/vibe.js";
+  const log = (m) => (document.getElementById("log").textContent += m + "\n");
+  window.busy = false; window.sent = []; window.stops = 0; window.spoken = [];
+  const realSpeak = speechSynthesis.speak.bind(speechSynthesis);
+  speechSynthesis.speak = (u) => { window.spoken.push(u.text); log("TTS: " + u.text); setTimeout(() => u.onend?.(), 50); };
+  document.getElementById("vibe-btn").innerHTML = handIcon();
+  const input = document.getElementById("input");
+  window.vibe = createVibe({ bar: document.getElementById("vibe-bar"), button: document.getElementById("vibe-btn"), menu: document.getElementById("vibe-menu"),
+    isBusy: () => window.busy, setInput: (t) => (input.value = t), send: () => { window.sent.push(input.value); log("SEND: " + input.value); input.value = ""; },
+    stop: () => { window.stops++; log("STOP"); } });
+</script>
+</body></html>

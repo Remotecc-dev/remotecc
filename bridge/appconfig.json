@@ -1,0 +1,8 @@
+{
+ "proto": 1,
+ "features": {
+  "themeWeb": {"on": true, "minBuild": 67, "label": "Theme Studio (web)"}
+ },
+ "strings": {},
+ "notices": []
+}

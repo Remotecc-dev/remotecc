@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.venv/
+bridge/config.json
+.wrangler/
+node_modules/
+.DS_Store
+web/public/bridge/
+
+# internal notes live in the private product repo (symlinked here on the owner's machines)
+docs/HANDOFF.md
+docs/PLAN-*.md
+docs/KICKOFF-*.md
+docs/BRAND.md

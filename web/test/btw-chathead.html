@@ -1,0 +1,30 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/public/styles.css"></head>
+<body style="background:var(--bg);color:var(--text);height:100vh;margin:0">
+<!-- Local preview of the /btw chat head (renderBtwDock lifted from app.js with stubs). python3 -m http.server in web/,
+     open /test/btw-chathead.html. Not deployed. -->
+<button id="btw-toggle" class="icon btw-toggle"><span class="btw-orb">btw</span></button><input id="input">
+<p style="padding:20px">Main chat…</p>
+<script type="module">
+const src = await (await fetch("/public/app.js")).text();
+const code = src.slice(src.indexOf("// The \"btw\" orb"), src.indexOf("// A follow-up in a /btw thread"));
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const ibtn = (name, fn, title) => { const b = el("button", "ibtn", name === "x" ? "×" : "↑"); b.title = title; b.onclick = () => fn(b); return b; };
+const btn = (label, fn, cls = "") => { const b = el("button", cls, label); b.onclick = () => fn(b); return b; };
+const markdown = (t) => { const d = el("div"); d.textContent = t; return d; };
+const S = { view: { kind: "terminal" }, inbox: [{ status: "running" }], branchRuns: [
+  { id: "a", thread: "a", btw: true, command: "App mất bao lâu nữa thì xong?", reply: "Khoảng 10 phút nữa: còn build và upload.", at: 1 },
+  { id: "a2", thread: "a", btw: true, command: "Còn bước nào?", reply: "", at: 3 },
+  { id: "b", thread: "b", btw: true, command: "Tailnet nào có Mac mini?", reply: "tail1234.ts.net", at: 2 } ] };
+const answerOf = (r) => r.reply;
+let renderMessages, sendTerminal = () => {}, sendBtw = () => {};
+const input = $("input");
+const f = new Function("$", "el", "ibtn", "btn", "markdown", "S", "input", code + "; return { renderBtwDock, BTW };");
+const api = f($, el, ibtn, btn, markdown, S, input);
+renderMessages = () => api.renderBtwDock(answerOf);
+window.renderMessages = renderMessages; window.BTW = api.BTW; window.S = S;
+// the lifted code calls renderMessages / sendTerminal from its closure scope → expose as globals
+globalThis.renderMessages = renderMessages; globalThis.sendTerminal = sendTerminal; globalThis.sendBtw = sendBtw;
+renderMessages();
+</script></body></html>

@@ -1,0 +1,114 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:">
+<!-- RemoteCC web screen for the iOS app: Settings → Theme. Ships in the signed bridge release; the app checks it against
+     MANIFEST.json/.sig before showing it, and gives it only window.rcc (see SuIn WebPanel): op() for theme.* ops,
+     apply() for the theme picked (the app switches when the screen closes), close(), env (colors, dark, lang). -->
+<style>
+  :root { --bg:#F5F4EE; --surface:#fff; --text:#1F1E1D; --muted:#73726C; --accent:#D97757; --border:#DEDBD1; --bubble:#EAE7DE; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; padding: 12px 16px calc(24px + env(safe-area-inset-bottom)); background: var(--bg); color: var(--text);
+    font: 16px/1.4 -apple-system, system-ui, sans-serif; }
+  h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 18px 4px 8px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--border); cursor: pointer; }
+  .row:first-child { border-top: 0; }
+  .row .ic { font-size: 22px; width: 28px; text-align: center; }
+  .row .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sw { display: flex; } .sw i { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--border); margin-left: -5px; }
+  .ck { color: var(--accent); font-weight: 700; width: 18px; text-align: right; visibility: hidden; } .on .ck { visibility: visible; }
+  .del { border: 0; background: none; color: var(--muted); font-size: 18px; padding: 2px 4px; }
+  .thumb { width: 44px; height: 30px; border-radius: 7px; border: 1px solid var(--border); background-size: cover; background-position: center; flex: none; }
+  .foot { font-size: 13px; color: var(--muted); margin: 8px 4px 0; }
+  textarea { width: 100%; min-height: 84px; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; font: inherit;
+    background: var(--surface); color: var(--text); resize: vertical; }
+  label.tg { display: flex; align-items: center; gap: 8px; margin: 10px 4px; font-size: 15px; }
+  button.go { width: 100%; margin-top: 10px; padding: 13px; border: 0; border-radius: 12px; background: var(--accent); color: #fff; font: 600 16px -apple-system, system-ui; }
+  button.go:disabled { opacity: .5; }
+  .err { color: #d0302a; font-size: 14px; margin: 8px 4px; }
+  .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid #fff8; border-top-color: #fff; border-radius: 50%; animation: s 1s linear infinite; vertical-align: -2px; margin-right: 8px; }
+  @keyframes s { to { transform: rotate(360deg); } }
+  .muted { color: var(--muted); }
+</style></head>
+<body>
+<h2 id="h-themes">Themes</h2>
+<div class="card" id="list"></div>
+<p class="foot" id="f-themes">The theme you pick is applied when you leave this screen.</p>
+<h2 id="h-make">Make your own</h2>
+<textarea id="prompt" placeholder="Describe the theme you want… e.g. Ottoman + Japanese, falling cherry blossoms"></textarea>
+<label class="tg hidden" id="edit-wrap"><input type="checkbox" id="edit"> <span id="l-edit">Change the current theme</span></label>
+<button class="go" id="make" disabled>Make theme</button>
+<p class="err" id="err"></p>
+<p class="foot" id="f-make">Claude Code on your Mac designs the theme with your Claude plan. It's kept on the Mac and works on every paired device.</p>
+<script>
+const rcc = window.rcc || { env: {}, op: async () => { throw new Error("Not in the app"); }, apply() {}, close() {} };
+const env = rcc.env || {};
+for (const [k, v] of Object.entries(env.colors || {})) document.documentElement.style.setProperty("--" + k, v);
+const VI = env.lang === "vi";
+const T = VI ? {
+  "h-themes": "Giao diện", "f-themes": "Giao diện bạn chọn được áp dụng khi rời màn này.", "h-make": "Tự tạo",
+  "l-edit": "Sửa giao diện đang dùng", "f-make": "Claude Code trên Mac thiết kế giao diện bằng gói Claude của bạn. Giao diện lưu trên Mac và dùng được trên mọi thiết bị đã ghép.",
+  make: "Tạo giao diện", making: "Claude đang thiết kế…", def: "Mặc định", snow: "Tuyết rơi", del: "Xoá giao diện này?",
+  ph: "Mô tả giao diện bạn muốn… vd: cờ đỏ sao vàng, hoa anh đào rơi" } : {
+  make: "Make theme", making: "Claude is designing your theme…", def: "Default", snow: "Let it snow", del: "Delete this theme?" };
+for (const id of ["h-themes", "f-themes", "h-make", "l-edit", "f-make"]) if (T[id]) document.getElementById(id).textContent = T[id];
+if (T.ph) document.getElementById("prompt").placeholder = T.ph;
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+
+let themes = [], current = env.theme || "", making = false;
+const svgURL = (svg) => 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+
+function row(id, icon, name, colors, t) {
+  const r = el("div", "row" + (current === id ? " on" : ""));
+  const art = t?.background?.art?.svg;
+  if (art) { const th = el("div", "thumb"); th.style.backgroundImage = svgURL(art); r.append(th); }
+  else r.append(el("span", "ic", icon));
+  r.append(el("span", "nm", name));
+  const sw = el("span", "sw"); for (const c of colors) { const i = el("i"); i.style.background = c; sw.append(i); } r.append(sw);
+  if (t) {
+    const d = el("button", "del", "🗑"); d.title = "Delete";
+    d.onclick = async (e) => { e.stopPropagation(); if (!confirm(T.del)) return;
+      try { themes = (await rcc.op("theme.delete", { id: t.id })).themes || []; if (current === id) pick("", null); render(); } catch (x) { $("err").textContent = x.message; } };
+    r.append(d);
+  }
+  r.append(el("span", "ck", "✓"));
+  r.onclick = () => { pick(id, t || null); render(); };
+  return r;
+}
+function pick(id, t) { current = id; rcc.apply(id, t); }
+function render() {
+  const l = $("list"); l.replaceChildren();
+  l.append(row("", "🎨", T.def, ["#F5F4EE", "#EAE7DE", "#D97757"]));
+  l.append(row("xmas", "❄️", T.snow, ["#F3F1EA", "#E6EEE6", "#C0392B"]));
+  for (const t of themes) l.append(row("custom:" + t.id, t.icon || "🎨", t.name,
+    [t.light?.bg, t.light?.bubble, t.light?.accent, t.dark?.bg, t.dark?.accent].filter(Boolean), t));
+  $("edit-wrap").classList.toggle("hidden", !current.startsWith("custom:"));
+  $("edit-wrap").style.display = current.startsWith("custom:") ? "" : "none";
+  $("make").disabled = making || !$("prompt").value.trim();
+  $("make").innerHTML = ""; if (making) $("make").append(el("span", "spin")); $("make").append(making ? T.making : T.make);
+}
+$("prompt").oninput = render;
+$("make").onclick = async () => {
+  const fields = { prompt: $("prompt").value.trim() };
+  const base = current.startsWith("custom:") && $("edit").checked && themes.find((t) => "custom:" + t.id === current);
+  if (base) { fields.base = base; fields.replace = true; }
+  making = true; $("err").textContent = ""; render();
+  try {
+    const r = await rcc.op("theme.make", fields, 300);
+    themes = r.themes || themes;
+    if (r.theme) { $("prompt").value = ""; pick("custom:" + r.theme.id, r.theme); }
+  } catch (x) { $("err").textContent = x.message; }
+  making = false; render();
+};
+render();
+rcc.op("theme.list", {}, 20).then((r) => {
+  themes = r.themes || [];
+  // the active theme was changed on another device: take its new version
+  const fresh = themes.find((t) => "custom:" + t.id === current);
+  if (fresh && env.themeUpdatedAt != null && fresh.updatedAt !== env.themeUpdatedAt) rcc.apply(current, fresh);
+  render();
+}).catch((x) => { $("err").textContent = x.message; });
+</script>
+</body></html>

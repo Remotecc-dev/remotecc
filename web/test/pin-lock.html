@@ -1,0 +1,37 @@
+<!doctype html><meta charset="utf-8"><title>pin lock test</title><pre id="out"></pre>
+<!-- Local check of the PIN lock in tunnel.js (IndexedDB, WebCrypto). python3 -m http.server in web/, open /test/pin-lock.html. Not deployed. -->
+<script type="module">
+import { Tunnel } from "/public/tunnel.js";
+const out = [], ok = (n, c, x = "") => out.push(`${c ? "PASS" : "FAIL"} ${n} ${c ? "" : JSON.stringify(x)}`);
+const step = new URLSearchParams(location.search).get("step") || "1";
+const mac = await crypto.subtle.generateKey({ name: "X25519" }, true, ["deriveBits"]);
+const macPub = new Uint8Array(await crypto.subtle.exportKey("raw", mac.publicKey));
+const b64u = (b) => btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+if (step === "1") {
+  indexedDB.deleteDatabase("clo2"); localStorage.clear();
+  const kp = await crypto.subtle.generateKey({ name: "X25519" }, true, ["deriveBits"]);
+  const t = new Tunnel();
+  await t.use({ relay: "relay.example", room: "r".repeat(20), macPub: b64u(macPub), macName: "Test Mac", token: "tok-123456789012345",
+    devKey: new Uint8Array(await crypto.subtle.exportKey("pkcs8", kp.privateKey)), devPub: b64u(new Uint8Array(await crypto.subtle.exportKey("raw", kp.publicKey))) });
+  await t.save();
+  ok("plain load before PIN", (await new Tunnel().load()) === true);
+  await t.setPin("4821", 4);
+  const t2 = new Tunnel(); const r = await t2.load();
+  ok("PIN set, inside idle time → opens without PIN", r === true && t2.p.token === "tok-123456789012345" && t2.pinSet, r);
+  await t2.lockNow();
+  const t3 = new Tunnel(); ok("after lock → 'locked'", (await t3.load()) === "locked" && t3.lockedName === "Test Mac");
+  let err = ""; try { await t3.unlock("0000"); } catch (e) { err = e.message; }
+  ok("wrong PIN refused", /Sai mã khoá \(còn 9 lần\)/.test(err), err);
+  ok("right PIN opens", (await t3.unlock("4821")) === true && t3.p.macName === "Test Mac" && t3.key);
+  const t4 = new Tunnel(); ok("unlocked again for the idle time", (await t4.load()) === true);
+  // the session key matches one derived from scratch
+  await t4.setPin("", 4); const t5 = new Tunnel(); ok("PIN removed → plain again", (await t5.load()) === true && !t5.pinSet);
+  await t5.setPin("123456", 1); await t5.lockNow();
+  const t6 = new Tunnel(); await t6.load();
+  for (let i = 0; i < 9; i++) { try { await t6.unlock("999999"); } catch {} }
+  let e10 = ""; try { await t6.unlock("999999"); } catch (e) { e10 = e.message; }
+  ok("10 wrong PINs forget the Mac", /10 lần/.test(e10) && (await new Tunnel().load()) === false, e10);
+}
+document.getElementById("out").textContent = out.join("\n");
+document.title = out.some((l) => l.startsWith("FAIL")) ? "SOME FAILED" : "ALL PASSED";
+</script>

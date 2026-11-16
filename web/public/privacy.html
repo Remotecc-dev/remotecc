@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RemoteCC — Privacy</title><link rel="icon" href="/logo.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><style>body{font:16px/1.6 -apple-system,system-ui,sans-serif;max-width:720px;margin:40px auto;padding:0 20px;color:#222}h1{font-size:28px}h2{font-size:19px;margin-top:28px}code{background:#f2f1ec;padding:1px 5px;border-radius:5px}</style></head><body>
+<a href="/" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:inherit;font-weight:600;margin-bottom:8px"><img src="/logo.svg" width="32" height="32" alt="" style="border-radius:8px">RemoteCC</a>
+
+<h1>RemoteCC — Privacy</h1><p>Updated: November 16, 2026</p>
+<p>RemoteCC lets you control Claude Code on your own computer from a browser or the AI Code Remote iPhone app. There are no accounts and no data in the cloud.</p>
+<h2>Where your data lives</h2><ul>
+<li><b>On your computer:</b> the session list, message queue, artifacts, files you send and secrets (encrypted, key held in the system keychain) live in <code>~/.remotecc</code>. Conversation history belongs to Claude Code (<code>~/.claude</code>).</li>
+<li><b>On your phone / browser:</b> only the pairing key for your computer (Keychain / IndexedDB). No copy of conversations or secrets.</li></ul>
+<h2>The relay</h2>
+<p>Your phone or browser and your computer talk through the relay at <code>relay.remotecc.dev</code> (Cloudflare). Everything is end-to-end encrypted (X25519 + AES-256-GCM) between your device and your computer; the relay holds no keys, can't read anything and stores no messages. It only sees when data passes, how large it is, and keeps a hash of the pairing token. If the computer is off, the app shows it as offline — messages are not held. When your device is on the same network or Tailscale, it can talk to the computer directly (still end-to-end encrypted, a fresh key per connection) without the relay.</p>
+<h2>Push notifications</h2>
+<p>When Claude finishes, your computer asks the relay to send a notification through Apple. The text is a fixed phrase (“Claude is done”, “Claude is waiting for your answer”, “Claude hit an error”) plus a random session id to open the right session — no conversation content.</p>
+<h2>Claude</h2><p>Claude Code runs on your computer with your own Anthropic account; RemoteCC sends nothing to any other AI provider.</p>
+<h2>Controls</h2><ul>
+<li>Revoke a device, or “Reset pairing” (disconnect everything), on the local page <code>http://127.0.0.1:7790</code> on your computer.</li>
+<li>“Forget this Mac” in the app / web.</li>
+<li>Uninstall: <code>bash ~/.remotecc/app/install.sh uninstall</code>; delete <code>~/.remotecc</code> to remove all data.</li></ul>
+<h2>Automatic updates</h2><p>The bridge on your computer checks remotecc.dev about once an hour for a new version. It only installs files signed with RemoteCC's release key, waits until no task is running, and rolls back on its own if the new version fails to start. The check sends no account data, project files or conversations. Turn it off from the menu bar icon (“Install updates automatically”) or with <code>remotecc settings auto-update off</code>.</p>
+<h2>Contact</h2><p>support@remotecc.dev</p></body></html>

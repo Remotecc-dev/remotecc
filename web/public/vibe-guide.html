@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vibecoding guide · RemoteCC</title><link rel="icon" href="/logo.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#F5F4EE; --card:#fff; --text:#1F1E1D; --muted:#73726C; --line:#E6E3DA; --accent:#D97757; --violet:#8E4FD6; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1F1F1D; --card:#2B2B29; --text:#EDECE7; --muted:#A6A49C; --line:#3B3A36; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 "Be Vietnam Pro", -apple-system, sans-serif; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 24px 18px 60px; }
+  .hero { position: relative; overflow: hidden; border-radius: 28px; padding: 36px 32px; color: #fff;
+    background: radial-gradient(120% 140% at 0% 0%, #F0A27F 0%, var(--accent) 35%, var(--violet) 100%); }
+  .hero h1 { font-size: clamp(28px, 5vw, 44px); line-height: 1.1; margin: 14px 0 10px; font-weight: 800; letter-spacing: -.02em; }
+  .hero p { margin: 0; max-width: 560px; opacity: .92; }
+  .hero .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+  .badge { background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3); padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 500; }
+  .hero .glyphs { position: absolute; right: -10px; bottom: -20px; display: flex; gap: 6px; opacity: .22; }
+  .hero .glyphs svg { width: 150px; height: 150px; }
+  h2 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 34px 0 12px; }
+  .grid { display: grid; gap: 12px; }
+  .g2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .g3 { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 18px; }
+  .mode { display: flex; gap: 14px; align-items: flex-start; }
+  .mode .ico { flex: none; width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; color: #fff; }
+  .mode h3, .gest h3 { margin: 0 0 4px; font-size: 17px; }
+  .mode p, .gest p, .phrase p { margin: 0; color: var(--muted); font-size: 14px; }
+  .gest { display: flex; flex-direction: column; gap: 10px; }
+  .gest .ico { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; }
+  .gest .when { margin-top: auto; align-self: flex-start; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+  .anim-nod { animation: nod 1.4s ease-in-out infinite; } @keyframes nod { 25%,75% { transform: translateY(5px); } 50% { transform: translateY(-3px); } }
+  .anim-shake { animation: shake 1.4s ease-in-out infinite; } @keyframes shake { 25%,75% { transform: translateX(-5px); } 50% { transform: translateX(5px); } }
+  .anim-wave { animation: wave 1.2s ease-in-out infinite; transform-origin: 60% 90%; } @keyframes wave { 25%,75% { transform: rotate(-14deg); } 50% { transform: rotate(14deg); } }
+  .anim-hold { animation: hold 1.6s ease-in-out infinite; } @keyframes hold { 50% { transform: scale(.9); } }
+  .phrases { padding: 4px 0; }
+  .phrase { display: flex; gap: 14px; align-items: center; padding: 12px 18px; }
+  .phrase + .phrase { border-top: 1px solid var(--line); }
+  .phrase .ico { flex: none; width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; }
+  .phrase b { display: block; }
+  .where { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  .mock { flex: none; display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px; }
+  .mock span { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; font-size: 12px; color: var(--muted); }
+  .mock .hl { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 25%, transparent); }
+  .tips { display: grid; gap: 10px; }
+  .tip { display: flex; gap: 12px; align-items: flex-start; }
+  .tip .ico { color: var(--accent); flex: none; margin-top: 2px; }
+  .steps { counter-reset: s; display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+  .steps li { counter-increment: s; display: flex; gap: 12px; align-items: flex-start; }
+  .steps li::before { content: counter(s); flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 13px; display: grid; place-items: center; }
+  footer { margin-top: 36px; color: var(--muted); font-size: 13px; text-align: center; }
+  svg { display: block; }
+</style>
+</head>
+<body>
+<div style="max-width:980px;margin:0 auto;padding:14px 18px 0;box-sizing:border-box"><a href="/" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:inherit;font-weight:600;margin-bottom:8px"><img src="/logo.svg" width="32" height="32" alt="" style="border-radius:8px">RemoteCC</a></div>
+
+<div class="wrap">
+  <section class="hero">
+    <div class="badges"><span class="badge">RemoteCC · Vibecoding</span><span class="badge">iPhone + Web</span></div>
+    <h1>Code with gestures<br>and your voice</h1>
+    <p>Answer Claude Code without typing: nod to agree, hold up fingers to choose, or just talk. When it is done, Claude reads you a summary.</p>
+    <div class="glyphs">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v1"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+    </div>
+  </section>
+
+  <h2>Where to turn it on</h2>
+  <div class="card where">
+    <div class="mock"><span>+</span><span>/</span><span>400k</span><span class="hl">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v1"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg></span></div>
+    <ol class="steps" style="flex:1;min-width:260px">
+      <li><div>Open a <b>Claude Code</b> session.</div></li>
+      <li><div>Tap the <b>hand</b> button next to the context-compact button (400k) to switch it on or off. Options: app → <b>Settings → Vibecoding</b>; web → the <b>gear</b> button on the vibe bar.</div></li>
+      <li><div>Pick a mode and allow <b>Camera</b> / <b>Microphone</b> when asked.</div></li>
+    </ol>
+  </div>
+
+  <h2>Two modes</h2>
+  <div class="grid g2">
+    <div class="card mode">
+      <div class="ico" style="background:linear-gradient(135deg,#F0A27F,#D97757)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v1"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg></div>
+      <div><h3>Gestures + voice</h3><p>The front camera reads your head and hands on the device. Hold up 4 fingers or tap the mic to talk.</p></div>
+    </div>
+    <div class="card mode">
+      <div class="ico" style="background:linear-gradient(135deg,#B48CF0,#8E4FD6)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/></svg></div>
+      <div><h3>Voice only</h3><p>No camera, easier on the battery. The mic listens continuously — stop talking for ~2 seconds and it sends.</p></div>
+    </div>
+  </div>
+
+  <h2>Gestures</h2>
+  <div class="grid g3">
+    <div class="card gest"><div class="ico" style="background:#34c75922;color:#2a9d4b"><svg class="anim-nod" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="9" r="5"/><path d="M12 18v4M9 21l3 3 3-3"/></svg></div>
+      <h3>Nod twice</h3><p>Sends “Đồng ý, làm tiếp đi.” (agree, carry on)</p><span class="when" style="background:#34c75922;color:#2a9d4b">Claude is waiting</span></div>
+    <div class="card gest"><div class="ico" style="background:#ff3b3022;color:#d6322a"><svg class="anim-shake" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="10" r="5"/><path d="M3 19h18M6 16l-3 3 3 3M18 16l3 3-3 3"/></svg></div>
+      <h3>Shake your head</h3><p>Sends “Không đồng ý — đề xuất cách khác.” (disagree, suggest another way)</p><span class="when" style="background:#ff3b3022;color:#d6322a">Claude is waiting</span></div>
+    <div class="card gest"><div class="ico" style="background:#0a84ff22;color:#0a6fd6"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11V4a2 2 0 0 1 4 0v7"/><path d="M14 9a2 2 0 0 1 4 0v4a7 7 0 0 1-7 7h-1a6 6 0 0 1-6-6v-2a2 2 0 0 1 4 0"/></svg></div>
+      <h3>Hold up 1–3 fingers</h3><p>Hold still ~1 second → “Pick option N.”</p><span class="when" style="background:#0a84ff22;color:#0a6fd6">Claude is waiting</span></div>
+    <div class="card gest"><div class="ico" style="background:#ff950022;color:#d97a00"><svg class="anim-wave" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v1"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg></div>
+      <h3>Hold up 4 fingers</h3><p>Fold your thumb, hold ~1 second. Turns the mic on; hold up 4 fingers again to send right away.</p><span class="when" style="background:#ff950022;color:#d97a00">Any time</span></div>
+    <div class="card gest"><div class="ico" style="background:#8e8e9322;color:#6e6e73"><svg class="anim-hold" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg></div>
+      <h3>Thumbs-up with your left hand</h3><p>Hold still ~1 second → turns vibecoding and the camera off.</p><span class="when" style="background:#8e8e9322;color:#6e6e73">Any time</span></div>
+  </div>
+
+  <h2>Voice commands</h2>
+  <div class="card phrases" style="padding:0">
+    <div class="phrase"><div class="ico" style="background:#0a84ff22;color:#0a6fd6"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div><b>Speak normally</b><p>Pause ~2 seconds and it is sent to Claude, as if you typed it.</p></div></div>
+    <div class="phrase"><div class="ico" style="background:#ff3b3022;color:#d6322a"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></div><div><b>“Stop” · “Dừng lại” · “Ngắt”</b><p>Interrupts the turn Claude is running.</p></div></div>
+    <div class="phrase"><div class="ico" style="background:#8e8e9322;color:#6e6e73"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="m22 9-6 6M16 9l6 6"/></svg></div><div><b>“Im lặng” · “Ngừng đọc”</b><p>Stops reading the summary.</p></div></div>
+    <div class="phrase"><div class="ico" style="background:#30b0c722;color:#1b8a9e"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></div><div><b>“Đọc lại”</b><p>Plays the last summary again.</p></div></div>
+    <div class="phrase"><div class="ico" style="background:#ff950022;color:#d97a00"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></div><div><b>“Tắt vibe”</b><p>Exits vibecoding.</p></div></div>
+  </div>
+
+  <h2>Tips</h2>
+  <div class="card tips">
+    <div class="tip"><svg class="ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg><div>Before sending there is a <b>6-second countdown</b> (default, adjustable in the gear menu; the app vibrates) — shake your head or tap <b>Cancel</b> to abort.</div></div>
+    <div class="tip"><svg class="ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg><div>Prop the device up, face <b>30–50 cm</b> away, with enough light in front.</div></div>
+    <div class="tip"><svg class="ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg><div>When Claude finishes, it reads the <b>first 1–2 sentences</b> and the <b>last question</b> (if any), using a built-in voice on your device.</div></div>
+    <div class="tip"><svg class="ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div>Camera images are processed <b>on the device</b> and never sent anywhere.</div></div>
+    <div class="tip"><svg class="ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2"/><path d="M6 11v2"/></svg><div>The camera uses more battery — for long sessions use <b>Voice only</b>. The web works best in <b>Safari</b> (Apple speech recognition) or Chrome.</div></div>
+  </div>
+
+  <footer>RemoteCC · vibecoding</footer>
+</div>
+</body>
+</html>
