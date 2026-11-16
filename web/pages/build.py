@@ -9,7 +9,7 @@ import re
 HERE = pathlib.Path(__file__).resolve().parent
 PUB = HERE.parent / "public"
 SITE = "https://remotecc.dev"
-NAV = [("claude-code-remote-control", "Remote control"), ("claude-code-on-iphone", "On iPhone"),
+NAV = [("claude-code", "Claude Code"), ("codex", "Codex"), ("claude-code-remote-control", "Remote control"), ("claude-code-on-iphone", "On iPhone"),
        ("claude-code-from-browser", "In the browser"), ("claude-code-over-tailscale", "Over Tailscale"),
        ("how-it-works", "How it works"), ("security", "Security")]
 EXTRA = ["/", "/install.md", "/windows", "/windows.md", "/vibe-guide", "/privacy", "/terms", "/support"]

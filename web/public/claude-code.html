@@ -1,0 +1,36 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RemoteCC for Claude Code — your Claude Code sessions on your phone and in any browser</title><meta name="description" content="Run Claude Code on your own computer and drive it from your phone or any browser: live sessions, plan usage left, cost per session, machine health. Free, open source, end-to-end encrypted."><link rel="canonical" href="https://remotecc.dev/claude-code">
+<link rel="alternate" type="text/markdown" href="/claude-code.md">
+<meta property="og:type" content="article"><meta property="og:site_name" content="RemoteCC"><meta property="og:url" content="https://remotecc.dev/claude-code">
+<meta property="og:title" content="RemoteCC for Claude Code — your Claude Code sessions on your phone and in any browser"><meta property="og:description" content="Run Claude Code on your own computer and drive it from your phone or any browser: live sessions, plan usage left, cost per session, machine health. Free, open source, end-to-end encrypted."><meta property="og:image" content="https://remotecc.dev/icon-512.png">
+<meta name="twitter:card" content="summary"><link rel="icon" href="/logo.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "RemoteCC for Claude Code \u2014 your Claude Code sessions on your phone and in any browser", "description": "Run Claude Code on your own computer and drive it from your phone or any browser: live sessions, plan usage left, cost per session, machine health. Free, open source, end-to-end encrypted.", "url": "https://remotecc.dev/claude-code", "inLanguage": "en", "publisher": {"@type": "Organization", "name": "RemoteCC", "url": "https://remotecc.dev"}, "about": {"@type": "SoftwareApplication", "name": "RemoteCC", "url": "https://remotecc.dev", "applicationCategory": "DeveloperApplication", "operatingSystem": "macOS, Linux, Windows (WSL2)", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}}}</script><style>:root{color-scheme:light dark;--bg:#F5F4EE;--card:#fff;--text:#1f1e1d;--muted:#6b6a64;--accent:#c96442;--line:#e6e4dc;--code:#efede6}
+@media(prefers-color-scheme:dark){:root{--bg:#262624;--card:#30302e;--text:#f0eee6;--muted:#a3a198;--line:#3a3936;--code:#1f1e1d}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:17px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:20px}header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-bottom:12px}
+.home{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:inherit;font-weight:600}.home img{border-radius:8px}
+nav{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px}nav a{color:var(--muted);text-decoration:none}nav a:hover,nav a[aria-current]{color:var(--accent)}
+h1{font:600 34px/1.2 "Source Serif 4",Georgia,serif;margin:18px 0 10px}h2{font-size:21px;margin:30px 0 8px}a{color:var(--accent)}
+code{background:var(--code);padding:1px 5px;border-radius:5px;font-size:.9em}pre{background:var(--code);padding:12px 14px;border-radius:10px;overflow-x:auto}pre code{padding:0}
+table{border-collapse:collapse;width:100%;font-size:15px;display:block;overflow-x:auto}th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+.cta{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:34px 0 10px}.cta pre{margin:8px 0}
+.btn{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;padding:8px 16px;border-radius:10px;font-weight:600}
+footer{color:var(--muted);font-size:14px;margin:26px 0 30px}footer a{color:var(--muted)}</style></head><body><div class="wrap">
+<header><a class="home" href="/"><img src="/logo.svg" width="30" height="30" alt="">RemoteCC</a><nav><a href="/claude-code" aria-current=page>Claude Code</a><a href="/codex">Codex</a><a href="/claude-code-remote-control">Remote control</a><a href="/claude-code-on-iphone">On iPhone</a><a href="/claude-code-from-browser">In the browser</a><a href="/claude-code-over-tailscale">Over Tailscale</a><a href="/how-it-works">How it works</a><a href="/security">Security</a></nav></header>
+<main><h1>RemoteCC for Claude Code</h1>
+<p>RemoteCC is a remote control for the <b>Claude Code CLI</b> running on your own Mac, Linux box or Windows (WSL2) PC. Your projects, tools and Claude plan stay where they are; you follow and steer every session from <a href="https://remotecc.dev">remotecc.dev</a>, the local web app, or the AI Code Remote iPhone app.</p>
+<h2>What works with Claude Code</h2>
+<ul><li><b>Every session on the computer</b>, live: what each one is doing, its transcript, tool calls and files.</li><li><b>Start new sessions</b> in any project folder, continue old ones, stop a running turn.</li><li><b>Plan usage left</b> for your Claude plan (5-hour and weekly windows, reset times), tokens and cost per session.</li><li><b>Child sessions and branches</b> to work in parallel; <b>btw</b> side questions that don't derail the main task.</li><li><b>Files and images</b> to and from the session; <b>artifacts</b> (HTML pages Claude makes) open on the phone.</li><li><b>Secrets</b> encrypted for your computer, usable by Claude without being printed.</li><li><b>Access level</b> per computer: Standard (<code>--permission-mode acceptEdits</code>) or Full access.</li><li>A <b>Claude Code plugin</b> that teaches Claude to install and use RemoteCC:<pre><code class="">/plugin marketplace add Remotecc-dev/remotecc
+/plugin install remotecc@remotecc</code></pre>
+<p>Then ask Claude: "set up RemoteCC so I can use this from my phone".</p></li></ul>
+<h2>Set up</h2>
+<pre><code class="bash">curl -fsSL https://remotecc.dev/install.sh | bash</code></pre>
+<p>Open <a href="https://remotecc.dev">remotecc.dev</a> on that computer (it pairs by itself), or run <code>remotecc pair</code> and scan the QR code with your phone. Details: <a href="/install.md">install guide</a> · <a href="/windows">Windows</a> · <a href="/claude-code-over-tailscale">Tailscale</a>.</p>
+<h2>Also works with</h2>
+<p><a href="/codex">Codex</a> — the same remote for OpenAI's Codex CLI, side by side with Claude Code.</p>
+<section class="cta"><b>Try RemoteCC — free and open source.</b> On the computer that runs Claude Code:
+<pre><code>curl -fsSL https://remotecc.dev/install.sh | bash</code></pre>
+<a class="btn" href="/">Open the web app</a> &nbsp; <a href="https://github.com/Remotecc-dev/remotecc">Source on GitHub</a> · <a href="/install.md">Install guide</a> · <a href="/windows">Windows</a></section></main>
+<footer>RemoteCC is open source (Apache-2.0) and not affiliated with Anthropic. Claude and Claude Code are trademarks of Anthropic.
+· <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/support">Support</a> · <a href="/claude-code.md">Markdown</a></footer>
+</div><script src="/beacon.js" defer></script></body></html>

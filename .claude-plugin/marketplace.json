@@ -1,0 +1,15 @@
+{
+  "name": "remotecc",
+  "owner": { "name": "RemoteCC", "email": "support@remotecc.dev" },
+  "metadata": { "description": "RemoteCC — the remote control for your coding agents (Claude Code, Codex) from any browser or phone." },
+  "plugins": [
+    {
+      "name": "remotecc",
+      "source": "./plugins/remotecc",
+      "description": "Install and use RemoteCC: drive this computer's Claude Code sessions from your phone or any browser, end-to-end encrypted, no account.",
+      "category": "productivity",
+      "homepage": "https://remotecc.dev",
+      "keywords": ["remote", "mobile", "phone", "browser", "iphone", "tailscale", "e2e"]
+    }
+  ]
+}

@@ -39,7 +39,7 @@ fi
 mkdir -p -m 700 "$HOME/.remotecc"
 tmp="$(mktemp -d "$HOME/.remotecc/dl.XXXXXX")"
 trap 'rm -rf "$tmp"' EXIT
-curl -fsSL "$BASE/bridge/MANIFEST.json" -o "$tmp/MANIFEST.json"
+curl -fsSL "$BASE/bridge/MANIFEST.json?src=install" -o "$tmp/MANIFEST.json"
 curl -fsSL "$BASE/bridge/MANIFEST.sig" -o "$tmp/MANIFEST.sig"
 curl -fsSL "$BASE/bridge/VERSION" -o "$tmp/VERSION"
 # The manifest (name + sha256 of every bridge file) must carry the release signature — the same Ed25519 key installed

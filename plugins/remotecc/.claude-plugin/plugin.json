@@ -1,0 +1,10 @@
+{
+  "name": "remotecc",
+  "version": "1.0.0",
+  "description": "Install and use RemoteCC: drive this computer's Claude Code sessions from your phone or any browser, end-to-end encrypted, no account.",
+  "author": { "name": "RemoteCC", "email": "support@remotecc.dev", "url": "https://remotecc.dev" },
+  "homepage": "https://remotecc.dev",
+  "repository": "https://github.com/Remotecc-dev/remotecc",
+  "license": "Apache-2.0",
+  "keywords": ["remote", "mobile", "phone", "browser", "iphone", "tailscale", "e2e"]
+}
