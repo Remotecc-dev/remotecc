@@ -1726,6 +1726,20 @@ def user_line(text):
     return json.dumps({"type": "user", "message": {"role": "user", "content": text}}) + "\n"
 
 
+_claude_flags = {}
+
+
+def claude_has(flag):
+    """Whether this Mac's Claude Code knows a CLI flag (older versions fail the whole turn on an unknown one)."""
+    if flag not in _claude_flags:
+        try:
+            out = subprocess.run([CONFIG["claude"], "--help"], capture_output=True, text=True, timeout=20).stdout
+        except (OSError, subprocess.SubprocessError):
+            out = ""
+        _claude_flags[flag] = flag in out
+    return _claude_flags[flag]
+
+
 def age(ts):
     try:
         ts = re.sub(r"(\.\d{6})\d+", r"\1", str(ts)).replace("Z", "+00:00")
@@ -1773,10 +1787,12 @@ def flush_waiting(uid, live):
             return False
         items.sort(key=lambda x: str(x[1].get("createdAt") or ""))
         try:
-            live["proc"].stdin.write(user_line("\n\n".join(prompt_for(r, q) for r, q in items)))
+            text = "\n\n".join(prompt_for(r, q) for r, q in items)
+            live["proc"].stdin.write(user_line(text))
             live["proc"].stdin.flush()
         except (OSError, ValueError):
             return False
+        live.setdefault("lines", []).append((text, [r for r, _ in items]))   # matched with Claude's replay: "read"
         for r, _ in items:
             live["injected"].append(r)
             _injected_ids.add(r)
@@ -1785,6 +1801,26 @@ def flush_waiting(uid, live):
                     ["status", "injectedInto", "editedAt"])
     log("waiting", len(items), "message(s) → one message into", live["rid"][:8])
     return True
+
+
+def read_injected(uid, live, rid, content):
+    """Claude took in a message written into its running turn (--replay-user-messages echo): it is part of the session
+    now, so the app shows it in the chat instead of "waiting". Unknown echoes (the turn's own prompt) are ignored."""
+    if isinstance(content, list):
+        content = "\n".join(x.get("text") or "" for x in content if isinstance(x, dict))
+    with live["lock"]:
+        lines = live.get("lines") or []
+        hit = next((i for i, (text, _) in enumerate(lines) if text.strip() == str(content or "").strip()), None)
+        if hit is None:
+            return
+        _, rids = lines.pop(hit)
+        for irid in rids:
+            if irid in live["injected"]:
+                live["injected"].remove(irid)
+                _injected_ids.discard(irid)
+                set_doc(f"clo/{uid}/terminalInbox/{irid}", {"status": "done", "mergedInto": rid, "reply": "", "editedAt": now()},
+                        ["status", "mergedInto", "reply", "editedAt"])
+    log("read", len(rids), "message(s) in", rid[:8])
 
 
 def profile_env(profile):
@@ -1875,6 +1911,10 @@ def run_request(uid, rid, req):
         cmd += ["--resume", sid]
     if fork or child:
         cmd += ["--fork-session"]  # side branch: same context, separate session, main history untouched
+    elif sid and claude_has("--replay-user-messages"):
+        # Claude echoes each message written into the running turn when it actually takes it in (after the current
+        # step): that's when the app stops showing it as "will read it after the current step".
+        cmd += ["--replay-user-messages"]
     add_dirs = [d for d in (req.get("addDirs") or session_dirs(sid) if sid else req.get("addDirs") or []) if isinstance(d, str) and os.path.isdir(d)]
     for d in add_dirs:
         cmd += ["--add-dir", d]  # environment's extra folders (remembered per session: every turn needs them again)
@@ -1913,7 +1953,7 @@ def run_request(uid, rid, req):
     live = None
     if sid and not fork and not child:
         live = _live[sid] = {"proc": proc, "rid": rid, "lock": threading.Lock(), "open": True,
-                             "browser": browser, "injected": [], "waiting": {}}
+                             "browser": browser, "injected": [], "waiting": {}, "lines": []}
     else:
         proc.stdin.close()
     timers = {}
@@ -2032,6 +2072,8 @@ def run_request(uid, rid, req):
                     session_dirs(new_sid, add_dirs)
             if ev.get("type") == "system" and ev.get("subtype") == "init":
                 remember_slash(ev)
+            if ev.get("type") == "user" and ev.get("isReplay") and live:
+                read_injected(uid, live, rid, (ev.get("message") or {}).get("content"))
             if ev.get("type") in ("assistant", "user") or ev.get("subtype") == "task_notification":
                 if finished["timer"]:   # working again (e.g. a background task it waited on ended): not done yet
                     finished["timer"].cancel()

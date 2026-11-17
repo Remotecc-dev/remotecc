@@ -51,6 +51,8 @@ reply = f.get("reply", {}).get("stringValue", "")
 check("messages sent mid-turn → one combined message after the turn", "waiting 2 message(s) → one message" in b.log(), b.log()[-600:])
 check("…both answered in that turn (ALPHA + BETA)", st == "done" and "ALPHA" in reply and "BETA" in reply and st1 == st2 == "done",
       (st, st1, st2, reply[-200:]))
+check("…marked read the moment Claude took them in (--replay-user-messages echo), not at the end of the turn",
+      "read 2 message(s)" in b.log(), b.log()[-600:])
 
 # "Stop & send now": the app writes the new message (interrupt) then cancels the running turn → the new one starts at once
 a.queue("t-long2", "Use the Bash tool to run `sleep 40`, then reply with exactly: LONG2-DONE", sid=sid)
