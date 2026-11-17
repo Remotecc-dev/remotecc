@@ -11,7 +11,7 @@ export const LOCALE = EN ? "en-US" : "vi-VN";
 const X = {
   // index.html
   "Claude Code trên máy tính của bạn, từ trình duyệt bất kỳ — không tài khoản, không lưu gì trên cloud.": "Claude Code on your own computer, from any browser — no account, nothing stored in the cloud.",
-  "Lấy app iPhone — AI Code Remote": "Get the iPhone app — AI Code Remote",
+  "Lấy app RemoteCC cho iPhone": "Get RemoteCC for iPhone",
   "Mac chưa có RemoteCC?": "RemoteCC not on your Mac yet?",
   "Qua Tailscale": "Over Tailscale",
   "Máy này và Mac đăng nhập cùng tài khoản Tailscale. Chọn Mac, rồi nhập mã 4 số hiện ở đây vào hộp thoại":
@@ -86,7 +86,7 @@ const X = {
   "Ghép": "Pair",
   "— nhập mã 4 số hiện ở đây rồi bấm": "— enter the 4-digit code shown here, then click",
   "Mã QR là để quét bằng": "The QR code is for the",
-  "app AI Code Remote trên iPhone": "AI Code Remote iPhone app",
+  "app RemoteCC trên iPhone": "RemoteCC iPhone app",
   ", trình duyệt không quét được. Liên kết ghép hết hạn sau vài phút — hết hạn thì bấm “Ghép…” trên Mac lần nữa. Không thấy biểu tượng RemoteCC? Mở":
     "; a browser can't scan it. Pairing links expire after a few minutes — then click “Pair…” on the Mac again. No RemoteCC icon? Open",
   "trên Mac.": "on the Mac.",

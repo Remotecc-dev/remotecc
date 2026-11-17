@@ -1,6 +1,6 @@
 # RemoteCC bridge (this Mac ↔ the RemoteCC app / web)
 
-Lets the AI Code Remote app (iPhone) and https://remotecc.dev see and continue this Mac's Claude Code sessions. No cloud
+Lets the RemoteCC iPhone app (iPhone) and https://remotecc.dev see and continue this Mac's Claude Code sessions. No cloud
 account: everything is stored here (`~/.remotecc/store.db`); devices reach it end-to-end encrypted through the relay
 (`relay.remotecc.dev`), or straight over the Wi-Fi when on the same network (app only).
 

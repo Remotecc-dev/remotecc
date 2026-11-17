@@ -8,4 +8,4 @@ Help me use Claude Code on this computer from my phone or another browser with R
    open source at https://github.com/Remotecc-dev/remotecc), ask me to confirm, then follow https://remotecc.dev/install.md.
 3. Then tell me how to pair: on this computer open https://remotecc.dev (pairs by itself); for a phone, I should run
    `remotecc pair` in my own terminal (it shows a QR code and waits) and scan it with the phone camera or the
-   AI Code Remote app. Don't run `remotecc pair` yourself — it waits for a scan.
+   RemoteCC app. Don't run `remotecc pair` yourself — it waits for a scan.

@@ -322,7 +322,7 @@ def lookup_uid():  # wire id — the iOS app depends on it
 
 
 # wire id — the iOS app depends on it: the `clo2://artifact/…` link scheme and the `clo2.fetch` page API named below
-ARTIFACT_HINT = ("The user reads this chat in the AI Code Remote phone app or at remotecc.dev. When a visual or interactive result helps (report, chart, "
+ARTIFACT_HINT = ("The user reads this chat in the RemoteCC phone app or at remotecc.dev. When a visual or interactive result helps (report, chart, "
                  "dashboard, mockup, slides, mini app), write one self-contained HTML file (inline CSS/JS; CDN libraries ok) and run "
                  "`remotecc-artifact FILE.html --title \"…\"`; put the printed clo2://artifact/… link on its own line in your reply — the app "
                  "shows it as a live preview. To update, rerun with `--id <same id>`. This command IS your artifact tool: when the user "
@@ -1681,7 +1681,7 @@ def secret_set(uid, name, value, label="", kind=""):
     me, devices = CONFIG["machine"], vault_devices(uid, max_age=0)
     mine = (devices or {}).get(me) or {}
     if mine.get("sign") != sign_public_key():
-        raise RuntimeError("this Mac isn't approved in the vault yet (open the AI Code Remote app → Secrets → Approve)")
+        raise RuntimeError("this Mac isn't approved in the vault yet (open the RemoteCC iPhone app → Secrets → Approve)")
     payload = {"type": "secret", "uid": uid, "name": name, "label": label, "kind": kind, "boxes": seal_for_devices(name, value, devices),
                "signedAt": now().isoformat().replace("+00:00", "Z"), "by": me}
     signed = json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
@@ -4004,7 +4004,7 @@ def op_secret_fetch(req, dev):
     for n in names:
         v = remotecc_tools.secret_get(n)
         if v is None:
-            return 404, {"error": f"No secret {n} on this Mac — add it in AI Code Remote › Secrets"}
+            return 404, {"error": f"No secret {n} on this Mac — add it in the RemoteCC app › Secrets"}
         values[n] = v
     sub = lambda t: SECRET_REF.sub(lambda m: values[m.group(1)], t)
     used_ref = any(SECRET_REF.search(x) for x in [url, *headers.values()]) or (body and SECRET_REF.search(body.decode("utf-8", "replace")))

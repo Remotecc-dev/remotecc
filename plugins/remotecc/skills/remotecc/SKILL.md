@@ -1,11 +1,11 @@
 ---
 name: remotecc
-description: RemoteCC lets the user drive Claude Code (and Codex) on this computer from their phone or any browser. Use when the user wants to use Claude Code from a phone, tablet or another computer, set up remote access, pair a device, asks about RemoteCC / remotecc.dev / the AI Code Remote app, or wants to show results, share artifacts or use secrets from their phone.
+description: RemoteCC lets the user drive Claude Code (and Codex) on this computer from their phone or any browser. Use when the user wants to use Claude Code from a phone, tablet or another computer, set up remote access, pair a device, asks about RemoteCC / remotecc.dev / the RemoteCC iPhone app, or wants to show results, share artifacts or use secrets from their phone.
 ---
 # RemoteCC
 
 RemoteCC is open source (Apache-2.0, https://github.com/Remotecc-dev/remotecc). A small bridge runs next to Claude Code on
-this computer; the user opens https://remotecc.dev (or the AI Code Remote iPhone app) and drives sessions from there.
+this computer; the user opens https://remotecc.dev (or the RemoteCC iPhone app) and drives sessions from there.
 End-to-end encrypted; the relay in the middle can't read anything; no account.
 
 ## Is it installed?
@@ -24,7 +24,7 @@ systemd user service on Linux). Never type the user's passwords; let them type i
 - Browser on this same computer: open https://remotecc.dev (it pairs by itself), or the local copy at
   http://127.0.0.1:7791 (`remotecc web`).
 - Phone or another computer: `remotecc pair` shows a QR code in the terminal — scan it with the phone camera (opens
-  remotecc.dev) or in the AI Code Remote app. On macOS the menu bar icon has "Pair a phone or browser…".
+  remotecc.dev) or in the RemoteCC iPhone app. On macOS the menu bar icon has "Pair a phone or browser…".
 - Same Tailscale tailnet: `remotecc tailscale` once here, then "Over Tailscale" on remotecc.dev.
 
 ## Using it

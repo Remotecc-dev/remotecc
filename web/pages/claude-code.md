@@ -6,7 +6,7 @@ description: Run Claude Code on your own computer and drive it from your phone o
 
 RemoteCC is a remote control for the **Claude Code CLI** running on your own Mac, Linux box or Windows (WSL2) PC.
 Your projects, tools and Claude plan stay where they are; you follow and steer every session from
-[remotecc.dev](https://remotecc.dev), the local web app, or the AI Code Remote iPhone app.
+[remotecc.dev](https://remotecc.dev), the local web app, or the RemoteCC iPhone app.
 
 ## What works with Claude Code
 - **Every session on the computer**, live: what each one is doing, its transcript, tool calls and files.

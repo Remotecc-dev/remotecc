@@ -48,7 +48,7 @@ End-to-end encrypted · no account · nothing stored in the cloud · open source
 The bridge, the web app and the relay are **free and open source, with every feature** — nothing is gated. The iPhone
 app is an optional native client for the same bridge.
 
-| | Web app (free, open source) | AI Code Remote for iPhone |
+| | Web app (free, open source) | RemoteCC for iPhone |
 |---|---|---|
 | Where | [remotecc.dev](https://remotecc.dev), or served by your own bridge at `http://127.0.0.1:7791` | [App Store](https://apps.apple.com/app/id6797019430) |
 | Sessions, new turns, files, artifacts, secrets | Yes | Yes |

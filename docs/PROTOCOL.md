@@ -1,6 +1,6 @@
 # Wire identifiers kept from CLO 2
 
-RemoteCC was forked from CLO 2. The shipped iOS app ("AI Code Remote", App Store id6797019430) speaks the CLO 2 wire
+RemoteCC was forked from CLO 2. The shipped iOS app ("RemoteCC", App Store id6797019430) speaks the CLO 2 wire
 protocol, and the web client shares it. Renaming any identifier below would silently break pairing, decryption or
 sync with already-installed apps, so they keep their original spelling. Everything else (names, paths, ports, labels,
 env vars, commands, hosts) is RemoteCC. In code each one is marked `# wire id — the iOS app depends on it`.

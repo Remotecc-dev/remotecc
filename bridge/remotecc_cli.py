@@ -1,6 +1,6 @@
 """`remotecc` — RemoteCC on this Mac, from Terminal (talks to the running bridge on 127.0.0.1 only).
 
-  remotecc pair [--app]         show a QR code here; scan it with a phone camera, remotecc.dev or the AI Code Remote app
+  remotecc pair [--app]         show a QR code here; scan it with a phone camera, remotecc.dev or the RemoteCC iPhone app
                             (--app: a clo2:// code for app versions before build 68)
   remotecc status               connection, settings, paired devices
   remotecc web [--online]       open the web app: served by this computer (http://127.0.0.1:7791), or remotecc.dev
@@ -49,7 +49,7 @@ description: RemoteCC (formerly RemoteCC) — the user drives Claude Code on thi
 {MARK}
 # RemoteCC on this Mac
 
-The user may be reading this session in the AI Code Remote app (phone) or web app. Turns started from there run as
+The user may be reading this session in the RemoteCC iPhone app (phone) or web app. Turns started from there run as
 `claude -p` through the RemoteCC bridge (LaunchAgent `dev.remotecc.bridge`, data in `~/.remotecc`).
 
 ## Commands (Terminal)
@@ -140,12 +140,12 @@ def cmd_pair(app=False):
     if not link:
         sys.exit("Couldn't start pairing — is RemoteCC online on this computer? (remotecc status)")
     print(f"\nPair a phone or browser with {s.get('label') or 'this computer'}\n")
-    if app:   # AI Code Remote builds before 68 only scan clo2:// codes
+    if app:   # RemoteCC builds before 68 only scan clo2:// codes
         link = "clo2://pair?d=" + link.split("d=", 1)[1]
     q = qr_text(link)
     print(q if q else "(QR needs the segno package — use the link below instead)")
     print(f"  Pairing link (paste it on https://remotecc.dev → “With a pairing link”):\n  {link}\n")
-    print("  iPhone: open AI Code Remote → Scan QR code (or the Camera app). Scanning this code pairs at once.")
+    print("  iPhone: open RemoteCC on the iPhone → Scan QR code (or the Camera app). Scanning this code pairs at once.")
     if not app:
         print("  The app says nothing when it scans this? It's an older version: run `remotecc pair --app` for a code it reads.")
     print("  Same Wi-Fi / Tailscale: pick this computer in the app or on remotecc.dev, then type the 4-digit code in the dialog here.")
@@ -273,7 +273,7 @@ def cmd_web(args):
     print(f"  1. On this computer, served by RemoteCC itself: {local or '(off — set local_web in the bridge config)'}")
     print(f"     same code as the site, from the signed release installed here; pairs by itself, works without remotecc.dev")
     print(f"  2. From anywhere (phone, other computers): {site}")
-    print("  On iPhone, the AI Code Remote app pairs with this same bridge: https://apps.apple.com/app/id6797019430\n")
+    print("  On iPhone, the RemoteCC iPhone app pairs with this same bridge: https://apps.apple.com/app/id6797019430\n")
     url = site if "--online" in args or not local else local
     opener = "open" if sys.platform == "darwin" else "xdg-open"
     try:

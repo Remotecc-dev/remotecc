@@ -27,7 +27,7 @@ button.ghost{background:transparent;color:var(--accent);border:1px solid var(--l
 </style></head><body><main>
 <h1>RemoteCC</h1><div class="muted" id="status">…</div>
 <div class="card"><b>Pair a phone or browser</b>
-<p class="muted small">Open the <a href="https://apps.apple.com/app/id6797019430" target="_blank" rel="noopener">AI Code Remote</a> iPhone app → Scan code. The code works once and expires after 5 minutes. Data is end-to-end encrypted; the relay server cannot read it and stores nothing.</p>
+<p class="muted small">Open the <a href="https://apps.apple.com/app/id6797019430" target="_blank" rel="noopener">RemoteCC</a> iPhone app → Scan code. The code works once and expires after 5 minutes. Data is end-to-end encrypted; the relay server cannot read it and stores nothing.</p>
 <div id="pair"></div></div>
 <div class="card" id="pendingCard" hidden><b>Pairing requests</b><p class="muted small">Only allow if the 4-digit code below matches the one on the phone.</p><div id="pending"></div></div>
 <div class="card"><b>Paired devices</b><div id="devices"></div></div>
@@ -46,9 +46,9 @@ async function load(){
     if(s.pairing!==lastQr){lastQr=s.pairing;const q=qrcode(0,"M");q.addData(s.pairing);q.make();
       const d=s.pairing.split("d=")[1];
       $("pair").innerHTML=`<div id="qr">${q.createImgTag(6,0)}</div><div class="muted small" style="text-align:center">Expires at ${new Date(s.pairingExp*1000).toLocaleTimeString()}</div>
-        <ol class="small" style="line-height:1.6;padding-left:20px"><li><b>iPhone:</b> open the <a href="https://apps.apple.com/app/id6797019430" target="_blank" rel="noopener">AI Code Remote</a> app → <b>Scan QR code</b> (or point the Camera app at the code → “Open in AI Code Remote”)</li>
+        <ol class="small" style="line-height:1.6;padding-left:20px"><li><b>iPhone:</b> open the <a href="https://apps.apple.com/app/id6797019430" target="_blank" rel="noopener">RemoteCC</a> iPhone app → <b>Scan QR code</b> (or point the Camera app at the code → “Open in RemoteCC”)</li>
         <li><b>Browser:</b> open <b>remotecc.dev</b> → <b>Scan QR code</b> and point the camera at this code</li>
-        <li><b>Can’t scan?</b> click <b>“Copy pairing link”</b>, send it to your iPhone, then in AI Code Remote: <b>Add Mac</b> ▸ <b>Or paste a pairing link</b></li>
+        <li><b>Can’t scan?</b> click <b>“Copy pairing link”</b>, send it to your iPhone, then in the RemoteCC app: <b>Add Mac</b> ▸ <b>Or paste a pairing link</b></li>
         <li>A device asking to pair appears here with a 4-digit code — if it matches the code on the device, click <b>Allow</b></li></ol>
         <p style="text-align:center;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="ghost" id="copylink">Copy pairing link</button> <button class="ghost" onclick="post('/api/pair/stop')">Cancel</button></p>`;
       $("copylink").onclick=()=>{navigator.clipboard.writeText(s.pairingShare||s.pairing);$("copylink").textContent="Copied";};}
