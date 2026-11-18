@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # RemoteCC on this Mac: a private Python env + a per-user LaunchAgent (starts at login, restarts if it dies).
-# Linux (Ubuntu): a systemd user service instead (remotecc-bridge.service, lingering so it runs without a login); no menu bar.
+# Linux (Ubuntu): a systemd user service instead (remotecc-bridge.service, lingering so it runs without a login).
 # Asks (in the terminal) where devices may pair from, what Claude may do, and whether to add the Claude Code skill;
 # then shows a QR code to pair your phone (`remotecc pair`).
 #   ./install.sh            install + start
-#   ./install.sh menubar    (re)install only the menu bar agent (the updater uses this; the bridge keeps running)
-#   ./install.sh uninstall  stop + remove both agents (your data in ~/.remotecc stays; delete that folder to wipe it)
+#   ./install.sh menubar    remove the old menu bar agent (the updater runs this; the bridge keeps running)
+#   ./install.sh uninstall  stop + remove the agent (your data in ~/.remotecc stays; delete that folder to wipe it)
 set -euo pipefail
 LABEL=dev.remotecc.bridge
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
@@ -39,35 +39,19 @@ if [[ -n "$LINUX" ]]; then
   export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=$XDG_RUNTIME_DIR/bus}"
 fi
 
+# The old menu bar icon (dev.remotecc.menubar) is gone: pairing, devices and settings are `remotecc …` in a terminal,
+# and a device asking to pair still gets the 4-digit dialog on this Mac (tunnel.py). Installs and updates remove it.
+# `./install.sh menubar` is what an updating bridge runs (the new install.sh is already in place by then).
 MLABEL=dev.remotecc.menubar
 MPLIST="$HOME/Library/LaunchAgents/$MLABEL.plist"
-
-# The menu bar: its own agent, so it survives bridge restarts. Exits 0 on "Thoát thanh menu" → stays off until next login.
-menubar() {
-  "$VENV/bin/pip" install -q --disable-pip-version-check "rumps>=0.4,<0.5" || { echo "warning: menu bar not installed (pip rumps failed)"; return 0; }
-  mkdir -p "$HOME/Library/LaunchAgents"
-  cat > "$MPLIST" <<PL
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict>
-  <key>Label</key><string>$MLABEL</string>
-  <key>ProgramArguments</key><array><string>$VENV/bin/python</string><string>-I</string><string>$DIR/remotecc_menubar.py</string></array>
-  <key>RunAtLoad</key><true/>
-  <key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict>
-  <key>ThrottleInterval</key><integer>30</integer>
-  <key>LimitLoadToSessionType</key><string>Aqua</string>
-  <key>StandardOutPath</key><string>$HOME/Library/Logs/remotecc-menubar.log</string>
-  <key>StandardErrorPath</key><string>$HOME/Library/Logs/remotecc-menubar.log</string>
-</dict></plist>
-PL
-  [[ -n "${REMOTECC_NO_AGENT:-}" || -n "$LINUX" ]] && return 0
-  launchctl bootout "gui/$(id -u)/$MLABEL" 2>/dev/null || true
-  launchctl bootstrap "gui/$(id -u)" "$MPLIST" 2>/dev/null || true
+no_menubar() {
+  [[ -n "$LINUX" ]] && return 0
+  [[ -n "${REMOTECC_NO_AGENT:-}" ]] || launchctl bootout "gui/$(id -u)/$MLABEL" 2>/dev/null || true
+  rm -f "$MPLIST" "$DIR/remotecc_menubar.py"
 }
 
 if [[ "${1:-}" == "menubar" ]]; then
-  [[ -z "$LINUX" && -f "$DIR/remotecc_menubar.py" && -x "$VENV/bin/python" ]] || exit 0
-  menubar; exit 0
+  no_menubar; exit 0
 fi
 if [[ -n "$LINUX" ]]; then
   [[ -n "${REMOTECC_NO_AGENT:-}" ]] || systemctl --user stop remotecc-bridge 2>/dev/null || true
@@ -82,7 +66,7 @@ else
 fi
 if [[ "${1:-}" == "uninstall" ]]; then
   launchctl bootout "gui/$(id -u)/$MLABEL" 2>/dev/null || true
-  rm -f "$PLIST" "$MPLIST"; echo "removed $LABEL + $MLABEL (data kept in ~/.remotecc)"; exit 0
+  rm -f "$PLIST" "$MPLIST"; echo "removed $LABEL (data kept in ~/.remotecc)"; exit 0
 fi
 
 command -v claude >/dev/null || [[ -x "$HOME/.local/bin/claude" ]] || echo "warning: Claude Code (claude) not found — install it first: https://claude.com/claude-code"
@@ -183,9 +167,9 @@ cat > "$PLIST" <<PL
   <key>StandardErrorPath</key><string>$LOG</string>
 </dict></plist>
 PL
-if [[ -n "${REMOTECC_NO_AGENT:-}" ]]; then menubar; echo "(test: LaunchAgents not loaded)"; exit 0; fi   # installer test
+if [[ -n "${REMOTECC_NO_AGENT:-}" ]]; then no_menubar; echo "(test: LaunchAgents not loaded)"; exit 0; fi   # installer test
 launchctl bootstrap "gui/$(id -u)" "$PLIST"
-[[ -f "$DIR/remotecc_menubar.py" ]] && menubar
+no_menubar
 fi
 echo "RemoteCC running · log: $LOG"
 echo "Commands: remotecc pair · remotecc status · remotecc devices · remotecc settings · remotecc uninstall"
@@ -207,7 +191,7 @@ else
   echo "  • Browser on this computer: open https://remotecc.dev (or refresh it if it's already open) — it pairs by itself."
   [[ "$(uname)" == Darwin ]] && echo "    Safari: click “Connect RemoteCC on this Mac” on that page once."
   echo "  • Phone or another computer: run  remotecc pair  in a Terminal window here and scan the QR code."
-  [[ "$(uname)" == Darwin ]] && echo "    Or use the RemoteCC icon in the menu bar → “Pair a phone or browser…”."
+  echo "    Same Wi-Fi / Tailscale instead: pick this computer on the phone, then type its 4-digit code in the dialog here."
   echo "  (If “remotecc” isn't found, open a new Terminal window or add ~/.local/bin to PATH.)"
   echo "Open source (Apache-2.0): https://github.com/Remotecc-dev/remotecc"
   if [[ "$s" == *'"devices": []'* ]] && { : </dev/tty; } 2>/dev/null; then

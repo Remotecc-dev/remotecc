@@ -5,7 +5,7 @@
 # The key is on the MacBook and wrangler is logged in on the mini: sign here, rsync public/ to the mini, deploy there.
 set -euo pipefail
 cd "$(dirname "$0")"
-FILES="trial.py remotecc_bridge.py localstore.py tunnel.py pairpage.py themes.py remotecc_tools.py remotecc_cli.py updater.py remotecc_menubar.py remotecc-resume install.sh restart.sh appconfig.json webapp-theme-studio.html"
+FILES="trial.py remotecc_bridge.py localstore.py tunnel.py pairpage.py themes.py remotecc_tools.py remotecc_cli.py updater.py remotecc-resume install.sh restart.sh appconfig.json webapp-theme-studio.html"
 if [[ -n "$(git -C .. status --porcelain -- bridge)" && -z "${REMOTECC_DEPLOY_DIRTY:-}" ]]; then
   echo "bridge/ has uncommitted changes — commit first (installed Macs update to what's published)"; exit 1
 fi

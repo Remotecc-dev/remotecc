@@ -3402,20 +3402,16 @@ def link_tools():
         mac_launcher()
 
 
-LAUNCHER_REV = "2"
+LAUNCHER_REV = "3"
 
 
 def mac_launcher():
-    """~/Applications/RemoteCC.app (Spotlight / Launchpad): opens Terminal with `remotecc pair` (QR to pair a phone) and brings
-    the menu bar icon back if it was quit. Also restarts the menu bar agent now — quitting it left no place to approve."""
-    uid = os.getuid()
-    subprocess.run(["launchctl", "kickstart", f"gui/{uid}/dev.remotecc.menubar"], capture_output=True, timeout=10)
+    """~/Applications/RemoteCC.app (Spotlight / Launchpad): opens Terminal with `remotecc pair` (QR to pair a phone)."""
     app = HOME / "Applications/RemoteCC.app"
     mark = app / "Contents/Resources/remotecc-launcher"
     if mark.exists() and mark.read_text().strip() == LAUNCHER_REV:
         return
-    script = (f'do shell script "launchctl kickstart gui/{uid}/dev.remotecc.menubar >/dev/null 2>&1; true"\n'
-              f'tell application "Terminal" to do script "{HOME}/.local/bin/remotecc pair"\n'
+    script = (f'tell application "Terminal" to do script "{HOME}/.local/bin/remotecc pair"\n'
               'tell application "Terminal" to activate')
     try:
         app.parent.mkdir(exist_ok=True)
@@ -3836,14 +3832,14 @@ def release_update_loop():
     time.sleep(CONFIG.get("update_first", 120))
     while True:
         try:
-            # the owner can turn it off in the menu bar (settings.json autoUpdate); "Check for updates" still works
+            # the owner can turn it off with `remotecc settings auto-update off` (settings.json autoUpdate); "Check for updates" still works
             before = dict(updater.installed(BRIDGE_DIR).get("files") or {})
             m = tunnel_mod.setting("autoUpdate") != "off" and updater.check(BRIDGE_DIR, log)
             if m and updater.web_only(before, m["files"]):
                 log("update: web app files only — served as is, no restart")
             elif m:
                 link_tools()
-                subprocess.run(["bash", str(BRIDGE_DIR / "install.sh"), "menubar"], capture_output=True, timeout=600)
+                subprocess.run(["bash", str(BRIDGE_DIR / "install.sh"), "menubar"], capture_output=True, timeout=600)   # removes the old menu bar agent
                 if not RESTART.exists():
                     RESTART.touch()   # exits once no turn is running; launchd starts the new code
         except Exception as e:

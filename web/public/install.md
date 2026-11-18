@@ -22,8 +22,8 @@ curl -fsSL https://remotecc.dev/install.sh | bash
 What it does:
 - downloads the signed bridge into `~/.remotecc/app` and checks the signature;
 - creates a private Python environment;
-- starts the bridge as a LaunchAgent on macOS, or as a systemd user service on Linux/WSL;
-- on macOS, adds the RemoteCC icon to the menu bar.
+- starts the bridge as a LaunchAgent on macOS, or as a systemd user service on Linux/WSL (no menu bar icon: you
+  manage it with the `remotecc` command).
 
 It ends with `RemoteCC running` and a **Next step** block.
 
@@ -32,8 +32,7 @@ Tell the user one of these:
 - **Browser on this computer:** open https://remotecc.dev, or refresh it if it's already open. It pairs with this
   computer by itself. In Safari, click "Connect RemoteCC on this Mac" once.
 - **Phone or another computer:** run `remotecc pair` in a Terminal window on this computer. A QR code appears. Scan it
-  with the iPhone Camera, or with "Scan QR code" on remotecc.dev. On macOS the menu bar icon also has
-  "Pair a phone or browser…".
+  with the iPhone Camera, or with "Scan QR code" on remotecc.dev.
 - **Another computer on the same Tailscale tailnet:** open remotecc.dev there, choose "Over Tailscale", pick this
   computer, then type the 4-digit code from that page into the RemoteCC dialog that opens on this computer.
 

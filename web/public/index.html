@@ -29,7 +29,7 @@
       if (t === "xmas") document.documentElement.dataset.theme = "xmas";
       if (t && t.indexOf("custom:") === 0) try { var c = JSON.parse(localStorage.getItem("clo.customTheme")), v = c[document.documentElement.dataset.dark === "1" ? "dark" : "light"];
         document.documentElement.dataset.theme = "custom"; for (var k in v) document.documentElement.style.setProperty("--" + k, v[k]); } catch (e) {} })();</script>
-  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I use Claude Code from my phone?", "acceptedAnswer": {"@type": "Answer", "text": "Install RemoteCC on the computer that runs Claude Code (curl -fsSL https://remotecc.dev/install.sh | bash), show the pairing QR code (menu bar icon or remotecc pair) and scan it with your phone. Then open remotecc.dev on the phone: your Claude Code sessions are there, live."}}, {"@type": "Question", "name": "Does my code or chat go through a server?", "acceptedAnswer": {"@type": "Answer", "text": "No. Your device and your computer talk end-to-end encrypted (X25519 + AES-256-GCM). The relay that connects them only forwards ciphertext and stores nothing; on the same Wi-Fi or Tailscale they connect directly."}}, {"@type": "Question", "name": "Is RemoteCC free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. The bridge, the web app and the relay are free and open source under Apache-2.0. You use your own Claude plan or API key with Claude Code."}}, {"@type": "Question", "name": "Do I need an account?", "acceptedAnswer": {"@type": "Answer", "text": "No. Pairing a browser with your computer is all it takes; nothing is stored in the cloud."}}, {"@type": "Question", "name": "Which computers does it run on?", "acceptedAnswer": {"@type": "Answer", "text": "macOS, Linux, and Windows through WSL2. Claude Code must be installed and signed in on that computer."}}, {"@type": "Question", "name": "Can I see my Claude usage and my computer's load?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. RemoteCC shows plan limits left in the 5-hour and weekly windows with reset times, tokens and cost per session, and the computer's RAM, CPU temperature and free disk."}}]}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I use Claude Code from my phone?", "acceptedAnswer": {"@type": "Answer", "text": "Install RemoteCC on the computer that runs Claude Code (curl -fsSL https://remotecc.dev/install.sh | bash), run remotecc pair in a terminal on that computer to show a QR code and scan it with your phone. Then open remotecc.dev on the phone: your Claude Code sessions are there, live."}}, {"@type": "Question", "name": "Does my code or chat go through a server?", "acceptedAnswer": {"@type": "Answer", "text": "No. Your device and your computer talk end-to-end encrypted (X25519 + AES-256-GCM). The relay that connects them only forwards ciphertext and stores nothing; on the same Wi-Fi or Tailscale they connect directly."}}, {"@type": "Question", "name": "Is RemoteCC free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. The bridge, the web app and the relay are free and open source under Apache-2.0. You use your own Claude plan or API key with Claude Code."}}, {"@type": "Question", "name": "Do I need an account?", "acceptedAnswer": {"@type": "Answer", "text": "No. Pairing a browser with your computer is all it takes; nothing is stored in the cloud."}}, {"@type": "Question", "name": "Which computers does it run on?", "acceptedAnswer": {"@type": "Answer", "text": "macOS, Linux, and Windows through WSL2. Claude Code must be installed and signed in on that computer."}}, {"@type": "Question", "name": "Can I see my Claude usage and my computer's load?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. RemoteCC shows plan limits left in the 5-hour and weekly windows with reset times, tokens and cost per session, and the computer's RAM, CPU temperature and free disk."}}]}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Be+Vietnam+Pro:wght@400;500;600&display=swap&subset=vietnamese">
@@ -50,7 +50,7 @@
         <p class="small">Or run it yourself in Terminal:</p>
         <div class="pair-copy"><code id="install-cmd" class="pair-cmd">curl -fsSL https://remotecc.dev/install.sh | bash</code>
           <button type="button" class="secondary small" data-copy="install-cmd">Copy</button></div>
-        <p class="muted small">Once installed, RemoteCC runs in the background on that computer (a Mac also gets a menu bar icon).</p>
+        <p class="muted small">Once installed, RemoteCC runs in the background on that computer — nothing in the menu bar or the Dock. You manage it from a terminal: <code>remotecc pair</code>, <code>remotecc status</code>, <code>remotecc devices</code>, <code>remotecc settings</code>.</p>
         <p id="install-wait" class="small install-wait hidden"><span class="dot"></span>Installing on this computer? This page pairs by itself as soon as it's done.</p>
         <p class="small">After installing: a browser on that computer pairs by itself (reload this page); for a phone or another computer, run <code>remotecc pair</code> and scan the QR code.</p>
         <p class="muted small oss">Open source (Apache-2.0) — read the installer and all the code before you run it: <a href="https://github.com/Remotecc-dev/remotecc" target="_blank" rel="noopener">github.com/Remotecc-dev/remotecc</a></p>
@@ -61,7 +61,7 @@
         </details>
         <details class="pair-more">
           <summary>Automatic updates</summary>
-          <p class="muted small">Automatic updates: the bridge checks remotecc.dev about once an hour and installs new versions signed by RemoteCC when no task is running. Turn off in the menu bar icon (“Install updates automatically”) or with <code>remotecc settings auto-update off</code>.</p>
+          <p class="muted small">Automatic updates: the bridge checks remotecc.dev about once an hour and installs new versions signed by RemoteCC when no task is running. Turn off with <code>remotecc settings auto-update off</code>.</p>
         </details>
     </section>
     <div id="pair-status" class="pair-status">
@@ -90,7 +90,7 @@
       <section class="pair-card">
         <h3>Scan QR code</h3>
         <ol class="pair-steps">
-          <li>On the computer running RemoteCC: on a Mac, click the RemoteCC icon in the menu bar and choose “Pair a phone or browser…”; on Linux or Windows (WSL), run <code>remotecc pair</code> in a terminal. A QR code appears.</li>
+          <li>On the computer running RemoteCC, open a terminal and run <code>remotecc pair</code> (Mac, Linux or Windows WSL). A QR code appears.</li>
           <li>Open the iPhone Camera app, point it at the code and tap the remotecc.dev link that appears. Or tap “Scan QR code” here, or take a screenshot of the code and tap “Upload QR image”.</li>
           <li>Tap “Connect” on the phone and you're done — no code to type on the computer.</li>
         </ol>
@@ -110,7 +110,7 @@
       <section class="pair-card">
         <h3>With a pairing link</h3>
         <ol class="pair-steps">
-          <li>Get a pairing link on the computer running RemoteCC: on a Mac, RemoteCC icon in the menu bar → “Pair a phone or browser…” → “Copy pairing link”; on Linux or Windows (WSL), run <code>remotecc pair</code> (the link is printed under the QR code).</li>
+          <li>Get a pairing link on the computer running RemoteCC: run <code>remotecc pair</code> in a terminal (the link is printed under the QR code).</li>
           <li>Send the link to this device (AirDrop, Messages…), paste it below and tap “Pair”.</li>
           <li>Type the 4-digit code shown here into the RemoteCC dialog on that computer.</li>
         </ol>
@@ -120,7 +120,7 @@
       <section class="pair-card">
         <h3>On that computer itself</h3>
         <p class="muted small">Open this page on the computer running RemoteCC: it pairs by itself, no code.</p>
-        <p class="muted small">Or use the web app served by that computer itself — same code, from the signed release, no remotecc.dev needed: open <a href="http://127.0.0.1:7791" target="_blank" rel="noopener"><code>http://127.0.0.1:7791</code></a> (or run <code>remotecc web</code>; on a Mac: menu bar icon → “Open the web app (local, this Mac)”).</p>
+        <p class="muted small">Or use the web app served by that computer itself — same code, from the signed release, no remotecc.dev needed: open <a href="http://127.0.0.1:7791" target="_blank" rel="noopener"><code>http://127.0.0.1:7791</code></a> (or run <code>remotecc web</code>).</p>
         <div id="local-connect" class="pair-row hidden"><a id="local-connect-link" class="primary" href="http://127.0.0.1:7790/web">Connect RemoteCC on this Mac</a>
           <span class="muted small">Safari won't let the page pair by itself — click this once.</span></div>
       </section>
@@ -141,7 +141,7 @@
       <nav class="why-links" aria-label="Guides"><a href="/claude-code">RemoteCC for Claude Code</a><a href="/codex">RemoteCC for Codex</a><a href="/claude-code-remote-control">Claude Code remote control</a><a href="/claude-code-on-iphone">Claude Code on iPhone</a><a href="/claude-code-from-browser">Claude Code in the browser</a><a href="/claude-code-over-tailscale">Over Tailscale</a><a href="/how-it-works">How it works</a><a href="/security">Security</a><a href="/windows">Windows (WSL2)</a></nav>
       <div class="faq">
         <h2>FAQ</h2>
-        <details><summary>How do I use Claude Code from my phone?</summary><p class="muted small">Install RemoteCC on the computer that runs Claude Code (curl -fsSL https://remotecc.dev/install.sh | bash), show the pairing QR code (menu bar icon or remotecc pair) and scan it with your phone. Then open remotecc.dev on the phone: your Claude Code sessions are there, live.</p></details>
+        <details><summary>How do I use Claude Code from my phone?</summary><p class="muted small">Install RemoteCC on the computer that runs Claude Code (curl -fsSL https://remotecc.dev/install.sh | bash), run remotecc pair in a terminal on that computer to show a QR code and scan it with your phone. Then open remotecc.dev on the phone: your Claude Code sessions are there, live.</p></details>
         <details><summary>Does my code or chat go through a server?</summary><p class="muted small">No. Your device and your computer talk end-to-end encrypted (X25519 + AES-256-GCM). The relay that connects them only forwards ciphertext and stores nothing; on the same Wi-Fi or Tailscale they connect directly.</p></details>
         <details><summary>Is RemoteCC free?</summary><p class="muted small">Yes. The bridge, the web app and the relay are free and open source under Apache-2.0. You use your own Claude plan or API key with Claude Code.</p></details>
         <details><summary>Do I need an account?</summary><p class="muted small">No. Pairing a browser with your computer is all it takes; nothing is stored in the cloud.</p></details>

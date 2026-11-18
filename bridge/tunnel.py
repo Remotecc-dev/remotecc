@@ -45,7 +45,7 @@ DIR = pathlib.Path(os.environ.get("REMOTECC_DIR") or pathlib.Path.home() / ".rem
 IDENTITY = DIR / "identity.json"
 DEVICES = DIR / "devices.json"
 SETTINGS = DIR / "settings.json"
-# Where a new device may ask to pair from (the Mac owner picks it in the menu bar). A QR shown on this Mac's own screen
+# Where a new device may ask to pair from (the owner picks it with `remotecc settings`). A QR shown on this Mac's own screen
 # always works: whoever scans it is standing at the Mac.
 PAIR_VIA = {"tailnet": "Tailscale only", "wifi": "Same Wi-Fi only", "both": "Tailscale or same Wi-Fi",
             "any": "Anywhere (also links sent over the internet)"}
@@ -57,7 +57,7 @@ DEFAULTS = {"pairVia": "both", "access": "full", "autoUpdate": "on"}   # full = 
 
 
 def setting(key):
-    """The owner's choices for this Mac (installer / `remotecc settings` / menu bar), in ~/.remotecc/settings.json."""
+    """The owner's choices for this Mac (installer / `remotecc settings`), in ~/.remotecc/settings.json."""
     try:
         return json.loads(SETTINGS.read_text()).get(key, DEFAULTS[key])
     except Exception:
@@ -183,7 +183,7 @@ def gui_env():
 
 
 def notify(text):
-    """macOS notification (best effort): a device is waiting for "Allow" in the RemoteCC menu."""
+    """macOS notification (best effort): a device is waiting to be allowed (the dialog got no answer)."""
     if os.environ.get("REMOTECC_NO_NOTIFY"):
         return
     if LINUX:
@@ -192,7 +192,7 @@ def notify(text):
         except Exception:
             pass
         return
-    script = f'display notification {json.dumps(text + " — click the RemoteCC menu bar icon to allow", ensure_ascii=False)} with title "RemoteCC" sound name "Glass"'
+    script = f'display notification {json.dumps(text + " — ask again from the device, or allow it on http://127.0.0.1:7790", ensure_ascii=False)} with title "RemoteCC" sound name "Glass"'
     try:
         subprocess.Popen(["/usr/bin/osascript", "-e", script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception:
@@ -351,8 +351,7 @@ def _dialog(cmd, alive, timeout, **kw):
 def ask_dialog(name, code, via="", timeout=170, alive=lambda: True):
     """A dialog in the middle of the Mac's screen asking for the 4 digits the device shows (like Bluetooth pairing):
     True = typed the right code, False = "Deny", None = no answer / no screen. A wrong code asks again (3 tries).
-    Typing it, not just clicking, means the user really looked at that device. The menu bar icon can be quit or hidden
-    behind the notch; this can't be missed."""
+    Typing it, not just clicking, means the user really looked at that device. This can't be missed."""
     if os.environ.get("REMOTECC_NO_NOTIFY"):
         return None
     q = lambda t: json.dumps(t, ensure_ascii=False)
@@ -521,14 +520,14 @@ class Tunnel:
         if mode == "any" or (how == "tailnet" and mode in ("tailnet", "both")) or (how == "wifi" and mode in ("wifi", "both")):
             return None
         return (f"This Mac only accepts pairing from: {PAIR_VIA.get(mode, mode)}. Scan the QR code on the Mac's screen "
-                f"(run `remotecc pair`), or change it with `remotecc settings` / the RemoteCC menu bar icon.")
+                f"(run `remotecc pair`), or change it with `remotecc settings`.")
 
     def known(self, pub):
         return bool(pub) and any(d.get("pub") == pub for d in self.devices)
 
     def ask(self, tag):
-        """Approve / deny from a dialog on this Mac where the user types the device's 4 digits (the menu bar and the
-        local page still work too)."""
+        """Approve / deny from a dialog on this Mac where the user types the device's 4 digits (the local page
+        http://127.0.0.1:7790 still works too)."""
         p = self.pending.get(tag)
         if not p:
             return

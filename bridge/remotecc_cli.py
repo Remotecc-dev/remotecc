@@ -38,7 +38,7 @@ WARN_ACCESS = """
   ⚠️  Full access ("yolo") means Claude Code runs every command without asking: it can delete files, install
      software, read anything your user can read, and push code. A paired phone or browser can start such a turn.
      Use it only on a Mac you own, in projects under git with backups, and revoke lost devices at once
-     (remotecc devices / the RemoteCC menu bar icon).
+     (remotecc devices · remotecc revoke NAME).
 """
 
 SKILL_TEXT = f"""---
@@ -208,7 +208,7 @@ def cmd_settings(args):
         if args[0] == "auto-update" and value in ("on", "off"):
             api("/api/settings", {"key": "autoUpdate", "value": value})
             return print("Automatic updates: " + value + ("" if value == "on" else
-                         " — you won't get fixes (including security fixes) until you choose 'Check for updates' in the menu bar or turn this back on"))
+                         " — you won't get fixes (including security fixes) until you turn this back on"))
         if key == "pairVia" and value in dict(PAIR_VIA):
             api("/api/settings", {"key": "pairVia", "value": value})
             return print(f"Pairing from: {dict(PAIR_VIA)[value]}")

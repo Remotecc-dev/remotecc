@@ -14,7 +14,7 @@ SITE, APP = ROOT / "site", ROOT / "home/.remotecc/app"
 (SITE / "bridge").mkdir(parents=True); APP.mkdir(parents=True)
 key = Ed25519PrivateKey.generate()
 PUB = base64.b64encode(key.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)).decode()
-FILES = ["trial.py", "remotecc_bridge.py", "localstore.py", "tunnel.py", "pairpage.py", "themes.py", "remotecc_tools.py", "remotecc_cli.py", "updater.py", "remotecc_menubar.py",
+FILES = ["trial.py", "remotecc_bridge.py", "localstore.py", "tunnel.py", "pairpage.py", "themes.py", "remotecc_tools.py", "remotecc_cli.py", "updater.py",
          "remotecc-resume", "install.sh", "restart.sh"]
 
 
@@ -51,14 +51,14 @@ r = subprocess.run(["bash", str(SITE / "install.sh")], env=env, capture_output=T
 check("installer: downloads every manifest file + verifies hashes", r.returncode == 0 and all((APP / f).exists() for f in FILES), r.stdout[-400:] + r.stderr[-400:])
 check("installer: keeps MANIFEST.json (seq for the updater)", json.loads((APP / "MANIFEST.json").read_text())["seq"] == 10)
 plist = ROOT / "home/Library/LaunchAgents"
-check("installer: writes bridge + menu bar agents", (plist / "dev.remotecc.bridge.plist").exists() and (plist / "dev.remotecc.menubar.plist").exists(), list(plist.glob("*")))
-mp = (plist / "dev.remotecc.menubar.plist").read_text()
-check("menu bar agent: stays quit after 'Thoát' (KeepAlive SuccessfulExit false), GUI session only", "<key>SuccessfulExit</key><false/>" in mp and "Aqua" in mp)
+(plist / "dev.remotecc.menubar.plist").write_text("old")   # a Mac that had the old menu bar icon
+(APP / "remotecc_menubar.py").write_text("old")
+r = subprocess.run(["bash", str(APP / "install.sh"), "menubar"], env=env, capture_output=True, text=True, timeout=60)
+check("updater step removes the old menu bar agent + its file", r.returncode == 0 and not (plist / "dev.remotecc.menubar.plist").exists()
+      and not (APP / "remotecc_menubar.py").exists() and (plist / "dev.remotecc.bridge.plist").exists(), r.stderr[-300:])
 py = ROOT / "home/.remotecc/venv/bin/python"
-r = subprocess.run([str(py), "-c", "import rumps, cryptography, websockets"], capture_output=True, text=True)
-check("installer: venv has rumps + cryptography + websockets", r.returncode == 0, r.stderr[-300:])
-r = subprocess.run([str(py), "-I", str(APP / "remotecc_menubar.py"), "--check"], capture_output=True, text=True, timeout=60)
-check("installed menu bar builds its menu", r.returncode == 0 and "Pair a phone" in r.stdout, r.stderr[-300:])
+r = subprocess.run([str(py), "-c", "import cryptography, websockets"], capture_output=True, text=True)
+check("installer: venv has cryptography + websockets", r.returncode == 0, r.stderr[-300:])
 
 publish(10, "v10b", tamper="localstore.py")
 r = subprocess.run(["bash", str(SITE / "install.sh")], env=env, capture_output=True, text=True, timeout=900)
@@ -71,7 +71,7 @@ publish(11, "v11")
 m = upd()
 check("higher seq, good signature → files swapped", m and m["seq"] == 11 and marker() == "v11", marker())
 check("installed MANIFEST.json now seq 11", json.loads((APP / "MANIFEST.json").read_text())["seq"] == 11)
-check("…and VERSION (shown in the menu bar) says v11", (APP / "VERSION").read_text().strip() == "v11", (APP / "VERSION").read_text())
+check("…and VERSION says v11", (APP / "VERSION").read_text().strip() == "v11", (APP / "VERSION").read_text())
 check("scripts stay executable", os.access(APP / "install.sh", os.X_OK) and os.access(APP / "remotecc-resume", os.X_OK))
 check("no staging folders left behind", not list(APP.parent.glob("upd.*")))
 
@@ -106,18 +106,18 @@ check("signed but not the RemoteCC bridge → rejected", notbridge and marker() 
 publish(9, "v9")
 check("older signed release (rollback) → ignored", upd() is None and marker() == "v11")
 refused("pip install of a package that doesn't exist → no swap", seq=13, marker="v13", pip=["remotecc-no-such-package-xyz"])
-publish(13, "v13", pip=["rumps"])
+publish(13, "v13", pip=["segno"])
 check("new release with a pip dependency → installed", (upd() or {}).get("seq") == 13 and marker() == "v13")
 check("installed release keeps its signature (the iOS app checks web screens with it)",
       (APP / "MANIFEST.sig").exists() and updater.verify((APP / "MANIFEST.json").read_bytes(), (APP / "MANIFEST.sig").read_text(), PUB) is not None)
 
 # ---- a running installed bridge picks a release up by itself and exits gracefully (launchd would start the new code)
 import time
-cfg = {"port": 7791, "lan_port": 7891, "update_first": 1, "update_every": 3, "label": "Update test Mac"}
+cfg = {"port": 17791, "lan_port": 17891, "local_web": 0, "update_first": 1, "update_every": 3, "label": "Update test Mac"}
 benv = {**env, "REMOTECC_CONFIG": json.dumps(cfg), "REMOTECC_BASE": BASE}
 # the installed updater must trust this test's key: same file, test key swapped in (only inside the throwaway HOME)
 u = APP / "updater.py"; u.write_text(u.read_text().replace(updater.RELEASE_PUB, PUB))
-publish(13, "v13", pip=["rumps"]); (SITE / "bridge/updater.py").write_bytes(u.read_bytes())
+publish(13, "v13", pip=["segno"]); (SITE / "bridge/updater.py").write_bytes(u.read_bytes())
 files = {f: hashlib.sha256((SITE / "bridge" / f).read_bytes()).hexdigest() for f in FILES}
 def republish(seq, mk):
     publish(seq, mk); (SITE / "bridge/updater.py").write_bytes(u.read_bytes())

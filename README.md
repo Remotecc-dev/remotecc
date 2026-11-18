@@ -77,7 +77,7 @@ Remotecc-dev/remotecc`, then `/plugin install remotecc@remotecc`.)
    ```
 
 2. Open **[remotecc.dev](https://remotecc.dev)** in a browser. On the same computer it pairs by itself; from another
-   device run `remotecc pair` (or use the menu bar icon → "Pair a phone or browser…") and scan the QR code with the
+   device run `remotecc pair` and scan the QR code with the
    phone camera or the iPhone app.
 3. Pick a project, send a message. Claude Code (or Codex) runs on your computer; you see it live.
 
@@ -85,7 +85,7 @@ Remotecc-dev/remotecc`, then `/plugin install remotecc@remotecc`.)
 
 | | Where | Good for |
 |---|---|---|
-| **Local** | `http://127.0.0.1:7791`, served by the bridge on your computer (`remotecc web`, or the menu bar → "Open the web app (local, this Mac)") | Using Claude Code on the same computer without depending on remotecc.dev. Same code as the site, taken from the signed release the bridge installed (`web-*` files), so it updates with the bridge and never loads the app from the internet |
+| **Local** | `http://127.0.0.1:7791`, served by the bridge on your computer (`remotecc web`) | Using Claude Code on the same computer without depending on remotecc.dev. Same code as the site, taken from the signed release the bridge installed (`web-*` files), so it updates with the bridge and never loads the app from the internet |
 | **Hosted** | [remotecc.dev](https://remotecc.dev) | Phones, tablets and other computers (browsers need HTTPS to reach your computer from another device) |
 
 Both pair the same way and talk to the same bridge. Turn the local one off with `"local_web": 0` in the bridge config.
@@ -120,7 +120,7 @@ Windows: RemoteCC runs inside WSL2 — see [remotecc.dev/windows](https://remote
 
 | Path | What |
 |---|---|
-| `bridge/` | The bridge, CLI (`remotecc`), menu bar app and installer pieces (Python) |
+| `bridge/` | The bridge, CLI (`remotecc`) and installer pieces (Python) |
 | `web/` | The web app (`web/public`), its Cloudflare Worker (`web/src`), `install.sh`, `deploy.sh`, tests |
 | `relay/` | The blind relay (Cloudflare Worker + Durable Object) |
 | `plugins/remotecc/` | Claude Code plugin (skill + `/remotecc-pair`), listed by `.claude-plugin/marketplace.json` |

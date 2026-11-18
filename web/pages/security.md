@@ -26,8 +26,8 @@ Sessions, queued messages, artifacts and files live in `~/.remotecc`. Secrets yo
 your computer and kept in its keychain. Conversation history belongs to Claude Code (`~/.claude`).
 
 ## What Claude may do
-Choose **Standard** (Claude asks before risky actions) or **Full access** per computer, from the menu bar or
-`remotecc settings access standard|full`.
+Choose **Standard** (Claude asks before risky actions) or **Full access** per computer with
+`remotecc settings access standard|full` (or `remotecc settings` to pick it interactively).
 
 ## Reporting a vulnerability
 Email **support@remotecc.dev**. See `SECURITY.md` in the repository. Privacy details: [privacy](/privacy).

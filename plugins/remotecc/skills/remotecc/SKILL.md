@@ -24,7 +24,7 @@ systemd user service on Linux). Never type the user's passwords; let them type i
 - Browser on this same computer: open https://remotecc.dev (it pairs by itself), or the local copy at
   http://127.0.0.1:7791 (`remotecc web`).
 - Phone or another computer: `remotecc pair` shows a QR code in the terminal — scan it with the phone camera (opens
-  remotecc.dev) or in the RemoteCC iPhone app. On macOS the menu bar icon has "Pair a phone or browser…".
+  remotecc.dev) or in the RemoteCC iPhone app.
 - Same Tailscale tailnet: `remotecc tailscale` once here, then "Over Tailscale" on remotecc.dev.
 
 ## Using it
