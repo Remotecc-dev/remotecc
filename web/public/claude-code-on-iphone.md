@@ -8,7 +8,7 @@ Claude Code** while the work still happens on your own computer — your repos, 
    ```bash
    curl -fsSL https://remotecc.dev/install.sh | bash
    ```
-2. On the computer, show a pairing QR code: menu bar icon → "Pair a phone or browser…", or run `remotecc pair`.
+2. On the computer, run `remotecc pair` in a terminal. A pairing QR code appears.
 3. Point the iPhone Camera at the code and open the remotecc.dev link. Tap "Connect". Done.
 
 Works in Safari and Chrome on iPhone and Android. Add remotecc.dev to your home screen for an app-like window.
