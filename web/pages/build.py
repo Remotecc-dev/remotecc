@@ -8,6 +8,8 @@ import re
 
 HERE = pathlib.Path(__file__).resolve().parent
 PUB = HERE.parent / "public"
+GH_REPO, GH_ORG = "https://github.com/Remotecc-dev/remotecc", "https://github.com/Remotecc-dev"
+APP_STORE = "https://apps.apple.com/app/id6797019430"
 SITE = "https://remotecc.dev"
 NAV = [("claude-code", "Claude Code"), ("codex", "Codex"), ("claude-code-remote-control", "Remote control"), ("claude-code-on-iphone", "On iPhone"),
        ("claude-code-from-browser", "In the browser"), ("claude-code-over-tailscale", "Over Tailscale"),
@@ -98,9 +100,10 @@ def page(slug, meta, body):
     title, desc = meta["title"], meta["description"]
     nav = "".join(f'<a href="/{s}"{" aria-current=page" if s == slug else ""}>{t}</a>' for s, t in NAV)
     ld = {"@context": "https://schema.org", "@type": "TechArticle", "headline": title, "description": desc,
-          "url": f"{SITE}/{slug}", "inLanguage": "en", "publisher": {"@type": "Organization", "name": "RemoteCC", "url": SITE},
+          "url": f"{SITE}/{slug}", "inLanguage": "en", "publisher": {"@type": "Organization", "name": "RemoteCC", "url": SITE, "sameAs": [GH_ORG, GH_REPO]},
           "about": {"@type": "SoftwareApplication", "name": "RemoteCC", "url": SITE, "applicationCategory": "DeveloperApplication",
-                    "operatingSystem": "macOS, Linux, Windows (WSL2)", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}}}
+                    "operatingSystem": "macOS, Linux, Windows (WSL2)", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+                    "codeRepository": GH_REPO, "sameAs": [GH_REPO, GH_ORG, APP_STORE]}}
     e = html.escape
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{e(title)}</title><meta name="description" content="{e(desc)}"><link rel="canonical" href="{SITE}/{slug}">
