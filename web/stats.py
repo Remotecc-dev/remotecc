@@ -40,6 +40,9 @@ Q = {
                 WHERE {W} AND (startsWith(blob5, 'ai:') OR startsWith(blob5, 'bot:')) GROUP BY client ORDER BY n DESC LIMIT 15""",
     "countries": f"""SELECT blob6 AS country, SUM(_sample_interval) AS views FROM remotecc_web WHERE {W} AND blob1 = 'web:view'
                      GROUP BY country ORDER BY views DESC LIMIT 10""",
+    # who fetched the installer: curl/wget = a real `curl … | bash` run; desktop/mobile = someone opened the file in a browser
+    "installers": f"""SELECT blob1 AS kind, blob5 AS client, SUM(_sample_interval) AS n FROM remotecc_web
+                      WHERE {W} AND blob1 IN ('install-script', 'install') GROUP BY kind, client ORDER BY n DESC""",
     "clients": f"""SELECT blob5 AS client, SUM(_sample_interval) AS views FROM remotecc_web WHERE {W} AND blob1 = 'web:view'
                    GROUP BY client ORDER BY views DESC LIMIT 10""",
 }
