@@ -7,7 +7,7 @@ Run Claude Code and Codex on your own computer — drive them from your phone or
 End-to-end encrypted · no account · nothing stored in the cloud · open source.</p>
 
 <p align="center">
-  <a href="https://apps.apple.com/app/id6797019430"><img src="https://tools.applemarketingtools.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" height="52" alt="Download RemoteCC on the App Store (iPhone, iPad, Mac)"></a>
+  <a href="https://apps.apple.com/app/id6797019430"><img src="https://img.shields.io/badge/Download_on_the-App_Store-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download RemoteCC on the App Store (iPhone, iPad, Mac)"></a>
 </p>
 
 <p align="center">
