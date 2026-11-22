@@ -2152,8 +2152,10 @@ def run_request(uid, rid, req):
         return
     if (sid and codex_file(sid)) or (not sid and profile.startswith("codex")):
         return run_codex(uid, rid, req, sid, profile, cwd)   # the session's own agent decides, not the app's picker
-    if (sid and agy_file(sid)) or (not sid and profile.startswith("agy")):
+    if (sid and agy_file(sid)) or (not sid and profile.startswith("agy") and CONFIG["agy"]):
         return run_agy(uid, rid, req, sid, profile, cwd)
+    if profile.startswith("agy"):   # agy picked (e.g. an Open Loop started elsewhere) but this Mac has no agy: Claude runs it
+        profile = profile.replace("agy", "claude", 1)
     fork = bool(req.get("fork")) and bool(sid)
     child = bool(req.get("child")) and bool(sid) and not fork  # sub-session: a fork that stays a session and reports back
     compacted = None
