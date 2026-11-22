@@ -110,7 +110,7 @@ export function rememberTs(name, text) {
 export class Tunnel extends EventTarget {
   constructor() {
     super(); this.p = null; this.key = null; this.ws = null; this.relayOnline = false; this.waiters = new Map(); this.retries = 0;
-    this.offTimer = 0; this.direct = null; this.dws = null; this.dTimer = 0;
+    this.offTimer = 0; this.direct = null; this.dws = null; this.dTimer = 0; this.lastNotice = 0;
     // Watchdog: a link sometimes goes deaf (socket "open" but nothing comes back). A request unanswered for 15 s → drop
     // the socket it went on; the other path / the reconnect resends everything in flight (the Mac answers a repeat id
     // from its cache, whichever path it came by).
@@ -322,7 +322,7 @@ export class Tunnel extends EventTarget {
     try { this.ws?.close(); } catch {}
     this.dropDirect(true);
     const mine = this.p?.token;
-    this.ws = null; this.p = null; this.key = null; this.priv = null; this.relayOnline = false;
+    this.ws = null; this.p = null; this.key = null; this.priv = null; this.relayOnline = false; this.lastNotice = 0;
     // Only our own pairing: an old tab (revoked, or still on old code) must not erase the one a newer tab just made.
     try { const saved = await kvGet("pairing"); if (!saved || !mine || saved.token === mine) { await kvDel("pairing"); await kvDel("unlock"); } } catch {}
     this.lockKey = null;
@@ -376,6 +376,11 @@ export class Tunnel extends EventTarget {
   }
 
   answer(r) {
+    if (r?.op === "changed") {
+      this.lastNotice = Date.now();
+      return this.emit("changed", Array.isArray(r.paths) ? r.paths : []);
+    }
+    if (!r?.id) return;
     const w = this.waiters.get(r.id);
     if (w) { this.waiters.delete(r.id); clearTimeout(w.timer); w.resolve(r); }
   }
@@ -418,7 +423,7 @@ export class Tunnel extends EventTarget {
         this.resendAll();
         return this.emit("presence", this.macOnline);
       }
-      if (r.id) this.answer(r);
+      this.answer(r);
     };
     ws.onclose = () => {
       clearTimeout(give);

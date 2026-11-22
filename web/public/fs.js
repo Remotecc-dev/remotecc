@@ -1,6 +1,6 @@
 // The slice of the Firebase Firestore SDK that app.js uses, answered by the paired Mac's local store through the tunnel.
-// Live listeners poll (faster for the open session, slower for lists, paused while the tab is hidden); a document poll
-// sends ?ifNoneMatch=<updateTime> so an unchanged transcript costs nothing.
+// Live listeners refresh right away on bridge "changed" notices, with a fallback poll (paused while the tab is hidden);
+// a document poll sends ?ifNoneMatch=<updateTime> so an unchanged transcript costs nothing.
 import { tunnel } from "./tunnel.js";
 
 export class Timestamp {
@@ -111,15 +111,27 @@ export function writeBatch() {
   };
 }
 
-// ------------------------------------------------------------ live listeners (polling)
+// ------------------------------------------------------------ live listeners (change notices + fallback poll)
 const FAST = /\/(terminalSessions|terminalInbox|terminalBranches)(\/|$)/;   // the open session and its queue
+const PUSHED = /\/(terminalSessions|terminalInbox)(\/|$)/;   // the bridge sends "changed" for these (PUSH_COLLS)
+const NOTICE_FRESH = 60_000;
+const MIN_GAP = 300;
 
 export function onSnapshot(ref, cb, onError) {
-  let stopped = false, timer = 0, last = null, stamp = "";
-  const every = FAST.test(ref.path) ? 1500 : 10_000;
+  let stopped = false, timer = 0, last = null, stamp = "", busy = false, rerun = false, startedAt = 0;
+  const fast = FAST.test(ref.path);
+  const coll = ref.coll || ref.id;
+  const pushed = PUSHED.test(ref.path);
+  // Notices live (one in the last minute) → a slow safety poll for what they cover; otherwise the old 1.5 s.
+  const pollMs = () => !fast ? 10_000 : (pushed && Date.now() - tunnel.lastNotice < NOTICE_FRESH) ? 10_000 : 1500;
+  const matches = (paths) => Array.isArray(paths) && paths.some((p) => typeof p === "string" && (
+    ref.type === "doc" ? (ref.path === p || ref.path.endsWith("/" + p)) : p.split("/")[0] === coll
+  ));
   const tick = async () => {
     if (stopped) return;
+    if (busy) { rerun = true; return; }
     if (document.hidden || !tunnel.macOnline) { timer = setTimeout(tick, 1500); return; }
+    busy = true; startedAt = Date.now();
     try {
       if (ref.type === "doc") {
         const r = await store("GET", `${ref.path}${stamp ? "?ifNoneMatch=" + encodeURIComponent(stamp) : ""}`);
@@ -143,8 +155,21 @@ export function onSnapshot(ref, cb, onError) {
         }
       }
     } catch (e) { onError?.(e); }
-    if (!stopped) timer = setTimeout(tick, every);
+    finally { busy = false; }
+    if (stopped) return;
+    if (rerun) { rerun = false; timer = setTimeout(tick, gap()); }
+    else timer = setTimeout(tick, pollMs());
   };
+  // At most one notice-driven fetch per MIN_GAP: a burst of writes (or a relay replaying an old notice) can't turn into a
+  // request storm. A notice while the tab is hidden still shortens the wait, so coming back shows the change within 1.5 s.
+  const gap = () => Math.max(0, startedAt + MIN_GAP - Date.now());
+  const onChanged = (e) => {
+    if (stopped || !matches(e.detail)) return;
+    if (busy) { rerun = true; return; }
+    clearTimeout(timer);
+    timer = setTimeout(tick, gap());
+  };
+  tunnel.addEventListener("changed", onChanged);
   tick();
-  return () => { stopped = true; clearTimeout(timer); };
+  return () => { stopped = true; clearTimeout(timer); tunnel.removeEventListener("changed", onChanged); };
 }
