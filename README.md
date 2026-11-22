@@ -1,6 +1,7 @@
 <p align="center">
   <a href="https://remotecc.dev"><img src="web/public/logo.svg" width="88" alt="RemoteCC logo"></a>
 </p>
+<p align="center"><a href="README.md">English</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.es.md">Español</a> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a></p>
 <h1 align="center">RemoteCC</h1>
 <p align="center"><b>The remote control for your coding agents.</b><br>
 Run Claude Code and Codex on your own computer — drive them from your phone or any browser.<br>
