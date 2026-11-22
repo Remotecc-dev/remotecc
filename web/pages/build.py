@@ -111,7 +111,7 @@ def page(slug, meta, body):
 <meta property="og:type" content="article"><meta property="og:site_name" content="RemoteCC"><meta property="og:url" content="{SITE}/{slug}">
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}"><meta property="og:image" content="{SITE}/icon-512.png">
 <meta name="twitter:card" content="summary"><link rel="icon" href="/logo.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<script type="application/ld+json">{json.dumps(ld)}</script><style>{STYLE}</style></head><body><div class="wrap">
+<script type="application/ld+json">{json.dumps(ld).replace("<", "\\u003c")}</script><style>{STYLE}</style></head><body><div class="wrap">
 <header><a class="home" href="/"><img src="/logo.svg" width="30" height="30" alt="">RemoteCC</a><nav>{nav}</nav></header>
 <main>{body}
 <section class="cta"><b>Try RemoteCC — free and open source.</b> On the computer that runs Claude Code:
@@ -121,6 +121,83 @@ def page(slug, meta, body):
 · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/support">Support</a> · <a href="/{slug}.md">Markdown</a></footer>
 </div><script src="/beacon.js" defer></script></body></html>
 """
+
+
+# Translated landing + install pages: pages/i18n/<page>.<lang>.md → public/<lang>/index.html, public/<lang>/install.html
+# (+ .md for agents). English sources: pages/i18n/home.en.md, install.en.md (the live English pages are / and /install.md).
+LANGS = {
+    "zh": {"html": "zh-CN", "og": "zh_CN", "name": "简体中文", "home": "首页", "install": "安装", "app": "打开网页版",
+           "cta": "免费开源，立即试用 RemoteCC。在运行 Claude Code 的电脑上运行：", "src": "GitHub 源码", "ios": "iPhone 应用",
+           "foot": "RemoteCC 是开源项目（Apache-2.0），与 Anthropic 无关。Claude 和 Claude Code 是 Anthropic 的商标。",
+           "privacy": "隐私", "terms": "条款", "support": "支持"},
+    "es": {"html": "es", "og": "es_ES", "name": "Español", "home": "Inicio", "install": "Instalación", "app": "Abrir la app web",
+           "cta": "Prueba RemoteCC: gratis y de código abierto. En el ordenador que ejecuta Claude Code:", "src": "Código en GitHub", "ios": "App para iPhone",
+           "foot": "RemoteCC es de código abierto (Apache-2.0) y no está afiliado a Anthropic. Claude y Claude Code son marcas de Anthropic.",
+           "privacy": "Privacidad", "terms": "Términos", "support": "Soporte"},
+    "ja": {"html": "ja", "og": "ja_JP", "name": "日本語", "home": "ホーム", "install": "インストール", "app": "Web アプリを開く",
+           "cta": "RemoteCC を試す（無料・オープンソース）。Claude Code を動かしているパソコンで：", "src": "GitHub のソースコード", "ios": "iPhone アプリ",
+           "foot": "RemoteCC はオープンソース（Apache-2.0）で、Anthropic とは無関係です。Claude と Claude Code は Anthropic の商標です。",
+           "privacy": "プライバシー", "terms": "利用規約", "support": "サポート"},
+    "fr": {"html": "fr", "og": "fr_FR", "name": "Français", "home": "Accueil", "install": "Installation", "app": "Ouvrir l'app web",
+           "cta": "Essayez RemoteCC, gratuit et open source. Sur l'ordinateur qui exécute Claude Code :", "src": "Code source sur GitHub", "ios": "App iPhone",
+           "foot": "RemoteCC est open source (Apache-2.0) et n'est pas affilié à Anthropic. Claude et Claude Code sont des marques d'Anthropic.",
+           "privacy": "Confidentialité", "terms": "Conditions", "support": "Assistance"},
+}
+I18N_PAGES = {"home": "", "install": "install"}   # page → path under /<lang>/
+
+
+def lpage(lang, name, meta, body):
+    L, e = LANGS[lang], html.escape
+    path = f"/{lang}/{I18N_PAGES[name]}"
+    alts = "".join(f'<link rel="alternate" hreflang="{LANGS[k]["html"]}" href="{SITE}/{k}/{I18N_PAGES[name]}">' for k in LANGS)
+    if name == "home":   # the English install guide is Markdown only (/install.md), so install pages cluster among themselves
+        alts += f'<link rel="alternate" hreflang="en" href="{SITE}/"><link rel="alternate" hreflang="x-default" href="{SITE}/">'
+    langs = " · ".join([f'<a href="/" lang="en">English</a>'] + [f'<a href="/{k}/{I18N_PAGES[name]}" lang="{LANGS[k]["html"]}"'
+                       + (' aria-current=page' if k == lang else "") + f'>{LANGS[k]["name"]}</a>' for k in LANGS])
+    nav = (f'<a href="/{lang}/"{" aria-current=page" if name == "home" else ""}>{e(L["home"])}</a>'
+           f'<a href="/{lang}/install"{" aria-current=page" if name == "install" else ""}>{e(L["install"])}</a>'
+           f'<a href="{APP_STORE}">{e(L["ios"])}</a><a href="{GH_REPO}">GitHub</a>')
+    app = {"@type": "SoftwareApplication", "name": "RemoteCC", "url": SITE, "applicationCategory": "DeveloperApplication",
+           "operatingSystem": "macOS, Linux, Windows (WSL2)", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+           "sameAs": [GH_REPO, GH_ORG, APP_STORE]}
+    ld = ({"@context": "https://schema.org", **app, "url": SITE + path, "description": meta["description"], "inLanguage": L["html"]}
+          if name == "home" else
+          {"@context": "https://schema.org", "@type": "TechArticle", "headline": meta["title"], "description": meta["description"],
+           "url": SITE + path, "inLanguage": L["html"], "about": app})
+    ld_json = json.dumps(ld, ensure_ascii=False).replace("<", "\\u003c")   # a "</script>" in front matter can't end the tag
+    return f"""<!doctype html><html lang="{L['html']}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{e(meta['title'])}</title><meta name="description" content="{e(meta['description'])}"><link rel="canonical" href="{SITE}{path}">
+{alts}<link rel="alternate" type="text/markdown" href="{path.rstrip('/') + ('/index' if name == 'home' else '')}.md">
+<meta property="og:type" content="website"><meta property="og:site_name" content="RemoteCC"><meta property="og:url" content="{SITE}{path}">
+<meta property="og:locale" content="{L['og']}"><meta property="og:title" content="{e(meta['title'])}"><meta property="og:description" content="{e(meta['description'])}">
+<meta property="og:image" content="{SITE}/icon-512.png"><meta name="twitter:card" content="summary"><link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png"><script type="application/ld+json">{ld_json}</script><style>{STYLE}.langs{{font-size:13px;color:var(--muted)}}.langs a{{color:var(--muted)}}</style></head><body><div class="wrap">
+<header><a class="home" href="/{lang}/"><img src="/logo.svg" width="30" height="30" alt="">RemoteCC</a><nav>{nav}</nav></header>
+<div class="langs">{langs}</div>
+<main>{body}
+<section class="cta"><b>{e(L['cta'])}</b>
+<pre><code>curl -fsSL https://remotecc.dev/install.sh | bash</code></pre>
+<a class="btn" href="/">{e(L['app'])}</a> &nbsp; <a href="{GH_REPO}">{e(L['src'])}</a> · <a href="/{lang}/install">{e(L['install'])}</a> · <a href="{APP_STORE}">{e(L['ios'])}</a></section></main>
+<footer>{e(L['foot'])} · <a href="/privacy">{e(L['privacy'])}</a> · <a href="/terms">{e(L['terms'])}</a> · <a href="/support">{e(L['support'])}</a></footer>
+</div><script src="/beacon.js" defer></script></body></html>
+"""
+
+
+def build_i18n():
+    urls = []
+    for lang in LANGS:
+        for name, sub in I18N_PAGES.items():
+            src = (HERE / "i18n" / f"{name}.{lang}.md").read_text()
+            m = re.match(r"^---\n(.*?)\n---\n", src, re.S)
+            meta = dict(l.split(": ", 1) for l in m.group(1).splitlines())
+            text = src[m.end():].lstrip()
+            out = PUB / lang
+            out.mkdir(exist_ok=True)
+            stem = sub or "index"
+            (out / f"{stem}.html").write_text(lpage(lang, name, meta, md(text)))
+            (out / f"{stem}.md").write_text(text.rstrip() + f"\n\n---\nRemoteCC · {SITE}/{lang}/{sub} · open source: {GH_REPO}\n")
+            urls.append(f"/{lang}/{sub}")
+    return urls
 
 
 def main():
@@ -133,7 +210,7 @@ def main():
         (PUB / f"{slug}.html").write_text(page(slug, meta, md(text)))
         (PUB / f"{slug}.md").write_text(text.rstrip() + f"\n\n---\nRemoteCC · {SITE}/{slug} · open source: https://github.com/Remotecc-dev/remotecc\n")
         built.append((slug, meta))
-    urls = EXTRA + [f"/{s}" for s, _ in built]
+    urls = EXTRA + [f"/{s}" for s, _ in built] + build_i18n()
     (PUB / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
                                      + "".join(f"  <url><loc>{SITE}{u}</loc></url>\n" for u in urls) + "</urlset>\n")
     (PUB / "llms.txt").write_text(f"""# RemoteCC

@@ -1,0 +1,46 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RemoteCC のインストール — スマホやブラウザから Claude Code を使う</title><meta name="description" content="macOS・Linux・Windows (WSL2) に 1 行で RemoteCC を導入。スマホから Claude Code を E2E 暗号化で操作。"><link rel="canonical" href="https://remotecc.dev/ja/install">
+<link rel="alternate" hreflang="zh-CN" href="https://remotecc.dev/zh/install"><link rel="alternate" hreflang="es" href="https://remotecc.dev/es/install"><link rel="alternate" hreflang="ja" href="https://remotecc.dev/ja/install"><link rel="alternate" hreflang="fr" href="https://remotecc.dev/fr/install"><link rel="alternate" type="text/markdown" href="/ja/install.md">
+<meta property="og:type" content="website"><meta property="og:site_name" content="RemoteCC"><meta property="og:url" content="https://remotecc.dev/ja/install">
+<meta property="og:locale" content="ja_JP"><meta property="og:title" content="RemoteCC のインストール — スマホやブラウザから Claude Code を使う"><meta property="og:description" content="macOS・Linux・Windows (WSL2) に 1 行で RemoteCC を導入。スマホから Claude Code を E2E 暗号化で操作。">
+<meta property="og:image" content="https://remotecc.dev/icon-512.png"><meta name="twitter:card" content="summary"><link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png"><script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "RemoteCC のインストール — スマホやブラウザから Claude Code を使う", "description": "macOS・Linux・Windows (WSL2) に 1 行で RemoteCC を導入。スマホから Claude Code を E2E 暗号化で操作。", "url": "https://remotecc.dev/ja/install", "inLanguage": "ja", "about": {"@type": "SoftwareApplication", "name": "RemoteCC", "url": "https://remotecc.dev", "applicationCategory": "DeveloperApplication", "operatingSystem": "macOS, Linux, Windows (WSL2)", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "sameAs": ["https://github.com/Remotecc-dev/remotecc", "https://github.com/Remotecc-dev", "https://apps.apple.com/app/id6797019430"]}}</script><style>:root{color-scheme:light dark;--bg:#F5F4EE;--card:#fff;--text:#1f1e1d;--muted:#6b6a64;--accent:#c96442;--line:#e6e4dc;--code:#efede6}
+@media(prefers-color-scheme:dark){:root{--bg:#262624;--card:#30302e;--text:#f0eee6;--muted:#a3a198;--line:#3a3936;--code:#1f1e1d}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:17px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:20px}header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-bottom:12px}
+.home{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:inherit;font-weight:600}.home img{border-radius:8px}
+nav{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px}nav a{color:var(--muted);text-decoration:none}nav a:hover,nav a[aria-current]{color:var(--accent)}
+h1{font:600 34px/1.2 "Source Serif 4",Georgia,serif;margin:18px 0 10px}h2{font-size:21px;margin:30px 0 8px}a{color:var(--accent)}
+code{background:var(--code);padding:1px 5px;border-radius:5px;font-size:.9em}pre{background:var(--code);padding:12px 14px;border-radius:10px;overflow-x:auto}pre code{padding:0}
+table{border-collapse:collapse;width:100%;font-size:15px;display:block;overflow-x:auto}th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+.cta{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:34px 0 10px}.cta pre{margin:8px 0}
+.btn{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;padding:8px 16px;border-radius:10px;font-weight:600}
+footer{color:var(--muted);font-size:14px;margin:26px 0 30px}footer a{color:var(--muted)}.langs{font-size:13px;color:var(--muted)}.langs a{color:var(--muted)}</style></head><body><div class="wrap">
+<header><a class="home" href="/ja/"><img src="/logo.svg" width="30" height="30" alt="">RemoteCC</a><nav><a href="/ja/">ホーム</a><a href="/ja/install" aria-current=page>インストール</a><a href="https://apps.apple.com/app/id6797019430">iPhone アプリ</a><a href="https://github.com/Remotecc-dev/remotecc">GitHub</a></nav></header>
+<div class="langs"><a href="/" lang="en">English</a> · <a href="/zh/install" lang="zh-CN">简体中文</a> · <a href="/es/install" lang="es">Español</a> · <a href="/ja/install" lang="ja" aria-current=page>日本語</a> · <a href="/fr/install" lang="fr">Français</a></div>
+<main><h1>RemoteCC のインストール</h1>
+<p>RemoteCC を使うと、PC 上の Claude Code を任意のブラウザや iPhone アプリから操作できます。通信はエンドツーエンドで暗号化され、クラウドには何も保存されません。</p>
+<p>RemoteCC は <b>オープンソース（Apache-2.0）</b> です：<a href="https://github.com/Remotecc-dev/remotecc">github.com/Remotecc-dev/remotecc</a>。実行前にインストーラーやブリッジのコードを確認できます。すべてのリリースには署名が付いており、署名が一致しないファイルはインストーラーが拒否します。</p>
+<h2>動作要件</h2>
+<ul><li>macOS、Linux、または WSL2 を有効にした Windows（下の「Windows の場合」を参照）。</li><li>この PC に Claude Code がインストールされ、サインイン済みであること（<code>claude --version</code> が動作すること）。</li><li>Python 3（macOS：<code>xcode-select --install</code> · Ubuntu：<code>sudo apt install python3 python3-venv</code>）。</li></ul>
+<h2>1. インストール</h2>
+<p>Claude Code を動かしている PC のターミナルで以下を実行します：</p>
+<pre><code class="bash">curl -fsSL https://remotecc.dev/install.sh | bash</code></pre>
+<p>実行内容：</p>
+<ul><li>署名済みのブリッジを <code>~/.remotecc/app</code> にダウンロードし、署名を検証します。</li><li>専用の Python 環境を作成します。</li><li>ブリッジをバックグラウンドで起動します（macOS では LaunchAgent、Linux と WSL では systemd ユーザーサービス）。管理には <code>remotecc</code> コマンドを使います。</li></ul>
+<p>完了すると <code>RemoteCC running</code> と <b>Next step</b> ブロックが表示されます。</p>
+<p>Claude に任せたい場合は、Claude Code に次を貼り付けてください：<code>https://remotecc.dev/install.md の手順に従ってこのコンピューターに RemoteCC をインストールし、ペアリング方法を教えてください。</code></p>
+<h2>2. ブラウザやスマホをペアリング</h2>
+<ul><li><b>この PC のブラウザ：</b> <a href="https://remotecc.dev/">remotecc.dev</a> を開くか、すでに開いている場合は再読み込みします。自動的にこの PC とペアリングされます。Safari では初回のみ "Connect RemoteCC on this Mac"（この Mac の RemoteCC に接続）をクリックしてください。</li><li><b>スマホや別の PC：</b> この PC のターミナルで <code>remotecc pair</code> を実行すると QR コードが表示されます。iPhone のカメラ、または remotecc.dev の "Scan QR code"（QR コードをスキャン）で読み取ってください。</li><li><b>同じ Tailscale tailnet 上の別 PC：</b> そちらで remotecc.dev を開いて "Over Tailscale"（Tailscale 経由）を選び、この PC を指定します。表示された 4 桁のコードを、この PC 側の RemoteCC ダイアログに入力してください。</li></ul>
+<h2>Windows の場合</h2>
+<p>RemoteCC は WSL2（Ubuntu）上で動作します：</p>
+<ol><li>PowerShell で <code>wsl --install -d Ubuntu</code> を実行し、Ubuntu を開きます。</li><li>Ubuntu 内に Claude Code をインストールしてサインインします。</li><li>Ubuntu 内で上記のインストールコマンドを実行します。</li></ol>
+<p>完了すると、Windows のブラウザでペアリング済みの remotecc.dev が開きます。詳しいガイド（英語）：<a href="/windows">Windows ガイド</a>。</p>
+<h2>よく使うコマンド</h2>
+<p><code>remotecc status</code> · <code>remotecc devices</code> · <code>remotecc settings</code> · <code>remotecc uninstall</code></p>
+<p>タスクが実行されていないときに、RemoteCC の署名付きアップデートが自動でインストールされます。無効にするには <code>remotecc settings auto-update off</code> を実行してください。</p>
+<section class="cta"><b>RemoteCC を試す（無料・オープンソース）。Claude Code を動かしているパソコンで：</b>
+<pre><code>curl -fsSL https://remotecc.dev/install.sh | bash</code></pre>
+<a class="btn" href="/">Web アプリを開く</a> &nbsp; <a href="https://github.com/Remotecc-dev/remotecc">GitHub のソースコード</a> · <a href="/ja/install">インストール</a> · <a href="https://apps.apple.com/app/id6797019430">iPhone アプリ</a></section></main>
+<footer>RemoteCC はオープンソース（Apache-2.0）で、Anthropic とは無関係です。Claude と Claude Code は Anthropic の商標です。 · <a href="/privacy">プライバシー</a> · <a href="/terms">利用規約</a> · <a href="/support">サポート</a></footer>
+</div><script src="/beacon.js" defer></script></body></html>

@@ -1,0 +1,46 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>安装 RemoteCC — 用手机或浏览器远程使用 Claude Code</title><meta name="description" content="一条命令在 macOS、Linux 或 Windows (WSL2) 安装 RemoteCC，用手机或浏览器操控 Claude Code，端到端加密。"><link rel="canonical" href="https://remotecc.dev/zh/install">
+<link rel="alternate" hreflang="zh-CN" href="https://remotecc.dev/zh/install"><link rel="alternate" hreflang="es" href="https://remotecc.dev/es/install"><link rel="alternate" hreflang="ja" href="https://remotecc.dev/ja/install"><link rel="alternate" hreflang="fr" href="https://remotecc.dev/fr/install"><link rel="alternate" type="text/markdown" href="/zh/install.md">
+<meta property="og:type" content="website"><meta property="og:site_name" content="RemoteCC"><meta property="og:url" content="https://remotecc.dev/zh/install">
+<meta property="og:locale" content="zh_CN"><meta property="og:title" content="安装 RemoteCC — 用手机或浏览器远程使用 Claude Code"><meta property="og:description" content="一条命令在 macOS、Linux 或 Windows (WSL2) 安装 RemoteCC，用手机或浏览器操控 Claude Code，端到端加密。">
+<meta property="og:image" content="https://remotecc.dev/icon-512.png"><meta name="twitter:card" content="summary"><link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png"><script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "安装 RemoteCC — 用手机或浏览器远程使用 Claude Code", "description": "一条命令在 macOS、Linux 或 Windows (WSL2) 安装 RemoteCC，用手机或浏览器操控 Claude Code，端到端加密。", "url": "https://remotecc.dev/zh/install", "inLanguage": "zh-CN", "about": {"@type": "SoftwareApplication", "name": "RemoteCC", "url": "https://remotecc.dev", "applicationCategory": "DeveloperApplication", "operatingSystem": "macOS, Linux, Windows (WSL2)", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "sameAs": ["https://github.com/Remotecc-dev/remotecc", "https://github.com/Remotecc-dev", "https://apps.apple.com/app/id6797019430"]}}</script><style>:root{color-scheme:light dark;--bg:#F5F4EE;--card:#fff;--text:#1f1e1d;--muted:#6b6a64;--accent:#c96442;--line:#e6e4dc;--code:#efede6}
+@media(prefers-color-scheme:dark){:root{--bg:#262624;--card:#30302e;--text:#f0eee6;--muted:#a3a198;--line:#3a3936;--code:#1f1e1d}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:17px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:20px}header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-bottom:12px}
+.home{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:inherit;font-weight:600}.home img{border-radius:8px}
+nav{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px}nav a{color:var(--muted);text-decoration:none}nav a:hover,nav a[aria-current]{color:var(--accent)}
+h1{font:600 34px/1.2 "Source Serif 4",Georgia,serif;margin:18px 0 10px}h2{font-size:21px;margin:30px 0 8px}a{color:var(--accent)}
+code{background:var(--code);padding:1px 5px;border-radius:5px;font-size:.9em}pre{background:var(--code);padding:12px 14px;border-radius:10px;overflow-x:auto}pre code{padding:0}
+table{border-collapse:collapse;width:100%;font-size:15px;display:block;overflow-x:auto}th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+.cta{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:34px 0 10px}.cta pre{margin:8px 0}
+.btn{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;padding:8px 16px;border-radius:10px;font-weight:600}
+footer{color:var(--muted);font-size:14px;margin:26px 0 30px}footer a{color:var(--muted)}.langs{font-size:13px;color:var(--muted)}.langs a{color:var(--muted)}</style></head><body><div class="wrap">
+<header><a class="home" href="/zh/"><img src="/logo.svg" width="30" height="30" alt="">RemoteCC</a><nav><a href="/zh/">首页</a><a href="/zh/install" aria-current=page>安装</a><a href="https://apps.apple.com/app/id6797019430">iPhone 应用</a><a href="https://github.com/Remotecc-dev/remotecc">GitHub</a></nav></header>
+<div class="langs"><a href="/" lang="en">English</a> · <a href="/zh/install" lang="zh-CN" aria-current=page>简体中文</a> · <a href="/es/install" lang="es">Español</a> · <a href="/ja/install" lang="ja">日本語</a> · <a href="/fr/install" lang="fr">Français</a></div>
+<main><h1>安装 RemoteCC</h1>
+<p>RemoteCC 让你通过任意浏览器或 iPhone 应用，远程使用电脑上的 Claude Code。连接全程端到端加密，不会在云端存储任何数据。</p>
+<p>RemoteCC <b>开源（Apache-2.0）</b>：<a href="https://github.com/Remotecc-dev/remotecc">github.com/Remotecc-dev/remotecc</a>。运行前你可以先查看安装脚本和桥接程序的源码。每个发布版本均经过签名，安装程序会拒绝签名不匹配的文件。</p>
+<h2>环境要求</h2>
+<ul><li>macOS、Linux，或启用了 WSL2 的 Windows（详见下方“在 Windows 上安装”）。</li><li>本机已安装并登录 Claude Code（<code>claude --version</code> 可正常运行）。</li><li>Python 3（macOS：<code>xcode-select --install</code> · Ubuntu：<code>sudo apt install python3 python3-venv</code>）。</li></ul>
+<h2>1. 安装</h2>
+<p>在运行 Claude Code 的电脑终端中执行：</p>
+<pre><code class="bash">curl -fsSL https://remotecc.dev/install.sh | bash</code></pre>
+<p>它会完成以下操作：</p>
+<ul><li>将已签名的桥接程序下载到 <code>~/.remotecc/app</code> 并校验签名；</li><li>创建独立的 Python 虚拟环境；</li><li>在后台启动桥接服务（macOS 上为 LaunchAgent，Linux 和 WSL 上为 systemd 用户服务）。你可以通过 <code>remotecc</code> 命令管理它。</li></ul>
+<p>安装结束时会输出 <code>RemoteCC running</code> 和 <b>Next step</b> 提示块。</p>
+<p>想直接让 Claude 帮你安装？把这句粘贴到 Claude Code 中：<code>请按照 https://remotecc.dev/install.md 在这台电脑上安装 RemoteCC，然后告诉我如何配对。</code></p>
+<h2>2. 配对浏览器或手机</h2>
+<ul><li><b>本机浏览器：</b>打开 <a href="https://remotecc.dev/">remotecc.dev</a>，若已打开则刷新页面，它会自动与本机配对。在 Safari 中，首次需点击一次 "Connect RemoteCC on this Mac"（连接此 Mac 上的 RemoteCC）。</li><li><b>手机或其他电脑：</b>在本机终端运行 <code>remotecc pair</code>，会出现一个二维码。用 iPhone 相机扫描，或在 remotecc.dev 上使用 "Scan QR code"（扫描二维码）扫描。</li><li><b>同一 Tailscale tailnet 下的其他电脑：</b>在另一台电脑上打开 remotecc.dev，选择 "Over Tailscale"（通过 Tailscale），选中当前电脑，然后将该页面显示的 4 位数字验证码输入到本机的 RemoteCC 对话框中。</li></ul>
+<h2>在 Windows 上安装</h2>
+<p>RemoteCC 在 WSL2（Ubuntu）内运行：</p>
+<ol><li>在 PowerShell 中运行 <code>wsl --install -d Ubuntu</code>，然后打开 Ubuntu。</li><li>在 Ubuntu 中安装并登录 Claude Code。</li><li>在 Ubuntu 中运行上方的安装命令。</li></ol>
+<p>完成后，你的 Windows 浏览器会自动打开已配对好的 remotecc.dev。完整指南（英文）：<a href="/windows">Windows 指南</a>。</p>
+<h2>常用命令</h2>
+<p><code>remotecc status</code> · <code>remotecc devices</code> · <code>remotecc settings</code> · <code>remotecc uninstall</code></p>
+<p>在没有任务运行时，经 RemoteCC 签名的更新会自动安装。如需关闭，可运行 <code>remotecc settings auto-update off</code>。</p>
+<section class="cta"><b>免费开源，立即试用 RemoteCC。在运行 Claude Code 的电脑上运行：</b>
+<pre><code>curl -fsSL https://remotecc.dev/install.sh | bash</code></pre>
+<a class="btn" href="/">打开网页版</a> &nbsp; <a href="https://github.com/Remotecc-dev/remotecc">GitHub 源码</a> · <a href="/zh/install">安装</a> · <a href="https://apps.apple.com/app/id6797019430">iPhone 应用</a></section></main>
+<footer>RemoteCC 是开源项目（Apache-2.0），与 Anthropic 无关。Claude 和 Claude Code 是 Anthropic 的商标。 · <a href="/privacy">隐私</a> · <a href="/terms">条款</a> · <a href="/support">支持</a></footer>
+</div><script src="/beacon.js" defer></script></body></html>
