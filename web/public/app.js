@@ -835,6 +835,7 @@ function openTerminal(id) {
       .sort((a, b) => tsDate(a.createdAt) - tsDate(b.createdAt));
     mergeLocalReqs();
     renderMessages();
+    syncProfiles();   // other agents are offered only while no turn runs
     // A turn we watched finish → vibecoding reads its summary.
     for (const r of S.inbox) if (wasActive.has(r.id) && r.status === "done" && r.reply) vibe.onReply(r.reply);
     vibe.render();
@@ -1053,7 +1054,9 @@ function syncProfiles() {
   const machine = v.kind === "terminal-new" ? v.machine : s?.machine;
   const feats = S.bridges.find((x) => x.machine === machine)?.features || [];
   const agent = s ? (s.agent === "codex" || s.agent === "agy" ? s.agent : "claude") : null;
-  const ok = (val) => { const a = agentOf(val); return agent ? a === agent : a === "claude" || feats.includes(a); };
+  // An open session keeps its agent; the others on that Mac stay listed (picking one opens a new session in the folder).
+  const busy = agent && S.inbox.some((r) => ["pending", "running", "cancel", "injected"].includes(r.status));
+  const ok = (val) => { const a = agentOf(val); return a === agent || (!busy && (a === "claude" || feats.includes(a))); };
   for (const o of sel.options) o.hidden = o.disabled = !ok(o.value);
   const full = sel.value.endsWith("yolo");
   if (agent) sel.value = agent + (full ? "-yolo" : "");
@@ -1061,6 +1064,7 @@ function syncProfiles() {
     const want = v.env?.profile || localStorage.getItem("clo.profile") || "claude-yolo";
     sel.value = ok(want) ? want : "claude" + (full ? "-yolo" : "");
   }
+  sel.dataset.prev = sel.value;   // what a refused pick goes back to
   const cur = agentOf(sel.value), other = cur !== "claude";   // Codex and agy have no /compact or child sessions
   fillModels(cur);
   for (const id of ["compact", "compact-now"]) $(id).classList.toggle("hidden", other);
@@ -1784,7 +1788,20 @@ const vibe = createVibe({
 for (const [id, key, def] of [["profile", "clo.profile", "claude-yolo"], ["effort", "clo.effort", ""], ["compact", "clo.compactAt", "400000"]]) {
   $(id).value = (localStorage.getItem(key) ?? def).replace(/^vertex/, "claude");  // Vertex profiles retired
   if (!$(id).value) $(id).value = def;
-  $(id).onchange = () => { localStorage.setItem(key, $(id).value); renderStatus(); };
+  $(id).onchange = () => {
+    const v = S.view, s = v.kind === "terminal" ? (S.session || S.terminal.find((x) => x.id === v.id)) : null;
+    const was = s ? (s.agent === "codex" || s.agent === "agy" ? s.agent : "claude") : null;
+    if (id === "profile" && was && agentOf($(id).value) !== was) {
+      // Another agent can't continue this conversation: a new session with it in the same folder (like /clear) —
+      // never mid-turn, and only where the session's folder is known.
+      if (S.inbox.some((r) => ACTIVE.includes(r.status)) || !s.machine || !s.cwd) { $(id).value = $(id).dataset.prev || was; return renderStatus(); }
+      localStorage.setItem(key, $(id).value);
+      openTerminalNew(s.machine, s.cwd, s.machineLabel || s.machine);
+      return;
+    }
+    localStorage.setItem(key, $(id).value);
+    renderStatus();
+  };
 }
 fillModels(agentOf($("profile").value));
 $("tmodel").onchange = () => { localStorage.setItem("clo.tmodel." + $("tmodel").dataset.agent, $("tmodel").value); renderStatus(); };
