@@ -687,7 +687,7 @@ function renderSidebar() {
   const chats = [...S.convos.values()].map((c) => ({ kind: "chat", id: c.id, title: c.title, date: tsDate(c.updatedAt),
     sub: `${c.modelRaw?.includes("sonnet") ? "Sonnet" : "Opus"} · ${rel(tsDate(c.updatedAt))}`, pinned: !!c.pinned }));
   const terms = S.terminal.map((s) => ({ kind: "terminal", id: s.id, title: s.title, date: s.editedAt, working: s.working, asks: asksYou(s),
-    bg: s.working ? [] : (s.bgTasks || []), activity: s.activity, sub: `${s.agent === "codex" ? "Codex" : "Claude Code"} · ${s.machineLabel || s.machine} · ${rel(s.editedAt)}${s.contextTokens ? ` · ${Math.round(s.contextTokens / 1000)}k` : ""}`, pinned: S.termPins.has(s.id) }));
+    bg: s.working ? [] : (s.bgTasks || []), activity: s.activity, sub: `${s.agent === "codex" ? "Codex" : s.agent === "agy" ? "agy" : "Claude Code"} · ${s.machineLabel || s.machine} · ${rel(s.editedAt)}${s.contextTokens ? ` · ${Math.round(s.contextTokens / 1000)}k` : ""}`, pinned: S.termPins.has(s.id) }));
   const q = ($("side-search").value || "").trim().toLowerCase();
   const all = [...chats, ...terms].sort((a, b) => b.date - a.date)
     .filter((x) => !q || [x.title, x.sub, x.activity].some((t) => (t || "").toLowerCase().includes(q)));
@@ -971,7 +971,7 @@ function renderTitle() {
   const v = S.view;
   let title = "", pinned = false;
   if (v.kind === "chat") { const c = S.convos.get(v.id); title = c?.title || ""; pinned = !!c?.pinned; }
-  if (v.kind === "terminal") { title = S.session?.title || (S.session?.agent === "codex" ? "Codex" : "Claude Code"); pinned = S.termPins.has(v.id); }
+  if (v.kind === "terminal") { title = S.session?.title || (S.session?.agent === "codex" ? "Codex" : S.session?.agent === "agy" ? "agy" : "Claude Code"); pinned = S.termPins.has(v.id); }
   if (v.kind === "terminal-new") title = `Phiên mới · ${v.label}${v.env ? ` · ${v.env.name}` : ""}`;
   if (LIB[v.kind]) title = LIB[v.kind];
   const nb = S.branchRuns.filter((r) => !r.btw).length;
@@ -1028,14 +1028,32 @@ $("title").ondblclick = renameCurrent;
 // Status line under the title (Claude Code views): Mac, plan limits left (Gói Claude profiles), session cost so far.
 // Agent/access picker: a new session offers Claude (+ Codex when that Mac has it); an existing session keeps its own
 // agent and only the access level follows the picker (the bridge runs a session with the agent that made it).
+// Models per agent: the composer's model list follows the session's agent; the pick rides on every message, so a
+// session can switch models between turns. agy: a family here + the effort picker → the bridge builds the model id.
+const AGENT_MODELS = {
+  claude: [["", "Mac default"], ["claude-opus-5-5", "Opus 5.5"], ["claude-sonnet-5-5", "Sonnet 5.5"], ["claude-fable-5-2", "Fable 5.2"], ["claude-haiku-5-5", "Haiku 5.5"]],
+  codex: [["", "Mac default"], ["gpt-6-astra", "GPT-6 Astra"], ["gpt-5.6-sol", "GPT-5.6 Sol"], ["gpt-5.6-terra", "GPT-5.6 Terra"], ["gpt-5.6-luna", "GPT-5.6 Luna"]],
+  agy: [["neon", "Gemini 4 Neon"], ["carbon", "Gemini 4 Carbon"], ["flash", "Gemini 3.8 Flash"]],
+};
+const AGENT_LABEL = { claude: "Claude", codex: "Codex", agy: "agy" };
+const agentOf = (profile) => profile.startsWith("codex") ? "codex" : profile.startsWith("agy") ? "agy" : "claude";
+function fillModels(agent) {
+  const m = $("tmodel");
+  if (m.dataset.agent === agent) return;
+  m.dataset.agent = agent;
+  m.replaceChildren(...AGENT_MODELS[agent].map(([v, t]) => Object.assign(document.createElement("option"), { value: v, textContent: t })));
+  const want = localStorage.getItem("clo.tmodel." + agent) ?? (agent === "claude" ? localStorage.getItem("clo.tmodel") : null) ?? "";
+  m.value = AGENT_MODELS[agent].some(([v]) => v === want) ? want : AGENT_MODELS[agent][0][0];
+}
+
 function syncProfiles() {
   const v = S.view, sel = $("profile");
   if (v.kind !== "terminal" && v.kind !== "terminal-new") return;
   const s = v.kind === "terminal" ? (S.session || S.terminal.find((x) => x.id === v.id)) : null;
   const machine = v.kind === "terminal-new" ? v.machine : s?.machine;
-  const hasCodex = (S.bridges.find((x) => x.machine === machine)?.features || []).includes("codex");
-  const agent = s ? (s.agent === "codex" ? "codex" : "claude") : null;
-  const ok = (val) => { const a = val.startsWith("codex") ? "codex" : "claude"; return agent ? a === agent : a === "claude" || hasCodex; };
+  const feats = S.bridges.find((x) => x.machine === machine)?.features || [];
+  const agent = s ? (s.agent === "codex" || s.agent === "agy" ? s.agent : "claude") : null;
+  const ok = (val) => { const a = agentOf(val); return agent ? a === agent : a === "claude" || feats.includes(a); };
   for (const o of sel.options) o.hidden = o.disabled = !ok(o.value);
   const full = sel.value.endsWith("yolo");
   if (agent) sel.value = agent + (full ? "-yolo" : "");
@@ -1043,9 +1061,12 @@ function syncProfiles() {
     const want = v.env?.profile || localStorage.getItem("clo.profile") || "claude-yolo";
     sel.value = ok(want) ? want : "claude" + (full ? "-yolo" : "");
   }
-  const isCodex = agent === "codex";   // Codex has no /compact or child sessions
-  for (const id of ["compact", "compact-now", "tmodel"]) $(id).classList.toggle("hidden", isCodex);   // model list = Claude's
-  if (isCodex) $("spawn").classList.add("hidden");
+  const cur = agentOf(sel.value), other = cur !== "claude";   // Codex and agy have no /compact or child sessions
+  fillModels(cur);
+  for (const id of ["compact", "compact-now"]) $(id).classList.toggle("hidden", other);
+  $("tmodel").classList.remove("hidden");
+  if (other) $("spawn").classList.add("hidden");
+  if (cur === "agy") $("btw-toggle").classList.add("hidden");   // the bridge refuses btw on agy sessions (one turn per conversation)
 }
 
 function renderStatus() {
@@ -1065,11 +1086,11 @@ function renderStatus() {
   if (online && b.cpuTemp != null) gauge("Nhiệt CPU", "🌡", b.cpuTemp, "°", b.cpuTemp < 80 ? "ok" : b.cpuTemp < 95 ? "mid" : "low");
   if (online && b.diskUsed != null) gauge(b.diskFree != null ? `SSD — còn ${Math.round(b.diskFree)} GB` : "SSD đã dùng", "⛁", b.diskUsed, "%",
     b.diskUsed < 85 ? "ok" : b.diskUsed < 95 ? "mid" : "low");
-  const codex = $("profile").value.startsWith("codex");
-  const usage = codex ? b?.codexUsage : b?.usage, wins = usage?.windows || [];
-  if (codex) st.append(el("span", "muted", "Codex"));
-  if (codex && s?.model) st.append(el("span", "muted", s.model));
-  if (!wins.length) st.append(el("span", "muted", codex ? (usage?.plan || "ChatGPT") : "Gói Claude"));   // bridge hasn't reported limits yet
+  const ag = agentOf($("profile").value), codex = ag === "codex";
+  const usage = codex ? b?.codexUsage : ag === "claude" ? b?.usage : null, wins = usage?.windows || [];
+  if (ag !== "claude") st.append(el("span", "muted", AGENT_LABEL[ag]));
+  if (ag !== "claude" && s?.model) st.append(el("span", "muted", s.model));
+  if (!wins.length) st.append(el("span", "muted", codex ? (usage?.plan || "ChatGPT") : ag === "agy" ? "Gemini" : "Gói Claude"));   // bridge hasn't reported limits yet
   else {
     if (usage.plan) st.append(el("span", "muted", usage.plan));
     for (const w of wins) {
@@ -1090,8 +1111,8 @@ function renderStatus() {
 
 // The composer's one pill: "Opus 5.5 · high · Full │ 367k" — opens the agent / model / effort / compact menu.
 function renderRunPill(s = S.view.kind === "terminal" ? S.session : null) {
-  const p = $("profile"), m = $("tmodel"), e = $("effort"), codex = p.value.startsWith("codex");
-  const parts = [codex ? "Codex" : (m.value ? m.selectedOptions[0]?.text : "Claude")];
+  const p = $("profile"), m = $("tmodel"), e = $("effort"), ag = agentOf(p.value), codex = ag !== "claude";
+  const parts = [m.value ? m.selectedOptions[0]?.text : AGENT_LABEL[ag]];
   if (e.value) parts.push(e.value);
   parts.push(p.value.endsWith("yolo") ? "Full" : "Standard");
   $("run-label").textContent = parts.join(" · ");
@@ -1760,11 +1781,13 @@ const vibe = createVibe({
   stop: () => stop(),
   suggestions: () => { const s = S.session; return s?.suggestions?.length && s.suggestFor === s.turnCount ? s.suggestions.slice(0, 3) : []; },
 });
-for (const [id, key, def] of [["profile", "clo.profile", "claude-yolo"], ["effort", "clo.effort", ""], ["tmodel", "clo.tmodel", ""], ["compact", "clo.compactAt", "400000"]]) {
+for (const [id, key, def] of [["profile", "clo.profile", "claude-yolo"], ["effort", "clo.effort", ""], ["compact", "clo.compactAt", "400000"]]) {
   $(id).value = (localStorage.getItem(key) ?? def).replace(/^vertex/, "claude");  // Vertex profiles retired
   if (!$(id).value) $(id).value = def;
   $(id).onchange = () => { localStorage.setItem(key, $(id).value); renderStatus(); };
 }
+fillModels(agentOf($("profile").value));
+$("tmodel").onchange = () => { localStorage.setItem("clo.tmodel." + $("tmodel").dataset.agent, $("tmodel").value); renderStatus(); };
 
 async function send(interrupt = false) {
   const text = input.value.trim();

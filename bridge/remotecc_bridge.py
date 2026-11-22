@@ -41,6 +41,8 @@ CONFIG = {
     "claude": None,  # auto: ~/.local/bin, /opt/homebrew/bin, PATH
     "codex": None,   # OpenAI Codex CLI, auto like claude (no codex = the app doesn't offer it)
     "codex_home": None,   # CODEX_HOME for app turns + where its sessions are read (default: $CODEX_HOME or ~/.codex)
+    "agy": None,     # Google Antigravity CLI (Gemini), auto like claude (no agy = the app doesn't offer it)
+    "agy_model": "gemini-4-neon-medium",   # agy turns with no model picked
     "label": None,   # friendly machine name shown in the app (default: hostname)
     "accept_untargeted": False,
     "compact_at": 500000,          # context tokens; above this the bridge runs /compact before the next app turn
@@ -70,6 +72,9 @@ CONFIG["claude"] = CONFIG["claude"] or shutil.which(
 CONFIG["codex"] = CONFIG["codex"] or shutil.which(
     "codex", path=f"{HOME}/.local/bin:/opt/homebrew/bin:/usr/local/bin:" + os.environ.get("PATH", ""))
 CODEX_HOME = pathlib.Path(os.path.expanduser(CONFIG["codex_home"] or os.environ.get("CODEX_HOME") or str(HOME / ".codex")))
+CONFIG["agy"] = CONFIG["agy"] or shutil.which(
+    "agy", path=f"{HOME}/.local/bin:/opt/homebrew/bin:/usr/local/bin:" + os.environ.get("PATH", ""))
+AGY_DIR = HOME / ".remotecc/agy"   # agy keeps its history in SQLite/protobuf: the bridge writes its own transcript per conversation
 
 BASE = "local/documents"
 DOC_PREFIX = f"projects/{CONFIG['project']}/databases/(default)/documents"
@@ -672,6 +677,11 @@ def scan_sessions(uid, force=None, limit=None):
             scan_codex(uid, force, limit)
         except Exception as e:
             log("codex scan failed", e)
+    if CONFIG["agy"] or AGY_DIR.exists():
+        try:
+            scan_agy(uid, force, limit)
+        except Exception as e:
+            log("agy scan failed", e)
     files = sorted((p for p in PROJECTS.glob("*/*.jsonl")), key=lambda p: p.stat().st_mtime, reverse=True)
     picked = files[: limit or CONFIG["max_sessions"]] + [p for p in files if p.stem == force]
     for p in picked:
@@ -862,7 +872,7 @@ def is_background(uid, sid, path):
 
 
 def upload_session(uid, sid, p, mtime, key, limit, agent="claude"):
-        s = parse_session(p) if agent == "claude" else parse_codex(p)
+        s = parse_session(p) if agent == "claude" else parse_codex(p) if agent == "codex" else parse_agy(p)
         _uploaded[sid] = key
         if not s:
             return
@@ -890,7 +900,7 @@ def upload_session(uid, sid, p, mtime, key, limit, agent="claude"):
                "needsInput": s["state"] != "working" and asks_user(s["turns"]),
                "totalCost": round(sum(x.get("cost") or 0 for x in s["turns"]), 2),  # whole session, not just the mirrored tail
                "parentId": children().get(sid, ""),
-               "background": is_background(uid, sid, p) if agent == "claude" else (s.get("source") == "exec" and sid not in app_sessions(uid)),
+               "background": is_background(uid, sid, p) if agent == "claude" else (agent == "codex" and s.get("source") == "exec" and sid not in app_sessions(uid)),
                "contextTokens": context_tokens(sid) if agent == "claude" else s.get("contextTokens", 0),
                "agent": agent, "model": s.get("model", ""),
                # background agents/commands still running after the answer (the claude process is still up)
@@ -1140,6 +1150,8 @@ def run_codex(uid, rid, req, sid, profile, cwd):
     cmd += ["-c", "developer_instructions=" + json.dumps(hints)]
     if CODEX_EFFORT.get(req.get("effort")):
         cmd += ["-c", f'model_reasoning_effort="{CODEX_EFFORT[req["effort"]]}"']
+    if re.fullmatch(r"(gpt|o\d)[\w.-]{0,40}", req.get("model") or ""):   # picked per message: a session can switch models
+        cmd += ["-m", req["model"]]
     cmd += ([sid] if sid else []) + ["-"]
     env = profile_env("codex")
     env["CODEX_HOME"] = str(CODEX_HOME)
@@ -1200,6 +1212,247 @@ def run_codex(uid, rid, req, sid, profile, cwd):
             last = next((l for l in reversed(reply.splitlines()) if l.strip() and not l.startswith("🔧")), "")
             ptext = (redact(err)[:200] if err else "") or push_summary(reply)
             notify(uid, "error" if err else "input" if last.rstrip().endswith("?") else "done", new_sid, ptitle, ptext)
+    except Exception as e:
+        log("notify failed", e)
+    if new_sid:
+        try:
+            scan_sessions(uid, force=new_sid)
+        except Exception as e:
+            log("rescan failed", e)
+
+
+# ---------------------------------------------------------------- agy (Google Antigravity CLI, Gemini models)
+# Turns run with `agy --print=<prompt> --output-format stream-json [--conversation <id>]` in the session's folder. agy keeps
+# its own history in SQLite/protobuf, so the bridge writes each conversation's turns to ~/.remotecc/agy/<id>.json and
+# mirrors that like Claude's and Codex's sessions (field agent: "agy"). Conversations started outside RemoteCC aren't listed.
+# The model is picked per message (family + effort → id), so one conversation can switch between Neon, Carbon and Flash.
+AGY_FAMILIES = {"neon": ("gemini-4-neon", ["low", "medium", "high", "xhigh"]),
+                "carbon": ("gemini-4-carbon", ["low", "medium", "high"]),
+                "flash": ("gemini-3.8-flash", ["low", "medium", "high"])}
+AGY_ID = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
+
+
+def agy_model(req):
+    """"neon"/"carbon"/"flash" (or a full id) + the effort picker → an agy model id. Unknown → the Mac's default."""
+    m, e = (req.get("model") or "").strip(), (req.get("effort") or "").strip()
+    for fam, (base, levels) in AGY_FAMILIES.items():
+        if m == fam or m.startswith(base + "-"):
+            if not e and m.startswith(base + "-"):
+                e = m[len(base) + 1:]
+            e = {"max": levels[-1], "xhigh": levels[-1]}.get(e, e)
+            return f"{base}-{e if e in levels else 'medium'}"
+    return CONFIG.get("agy_model") or "gemini-4-neon-medium"
+
+
+def agy_args(profile):
+    """Full access only when asked for (…-yolo) AND this Mac allows it; else edits are accepted and commands that need
+    permission are refused (headless agy can't ask)."""
+    if profile.endswith("yolo") and tunnel_mod.setting("access") == "full":
+        return ["--dangerously-skip-permissions"]
+    return ["--mode", "accept-edits"]
+
+
+def agy_file(sid):
+    if not sid or not AGY_ID.fullmatch(sid):
+        return None
+    f = AGY_DIR / f"{sid}.json"
+    return f if f.exists() else None
+
+
+def agy_load(sid):
+    f = agy_file(sid)
+    try:
+        return json.loads(f.read_text()) if f else None
+    except (OSError, ValueError):
+        return None
+
+
+def agy_save(d):
+    AGY_DIR.mkdir(parents=True, exist_ok=True)
+    tmp = AGY_DIR / f".{d['id']}.tmp"
+    tmp.write_text(json.dumps(d))
+    os.replace(tmp, AGY_DIR / f"{d['id']}.json")
+
+
+def parse_agy(path):
+    """→ like parse_codex: title, cwd, turns, activity, state, lastAt, contextTokens, model."""
+    try:
+        d = json.loads(pathlib.Path(path).read_text())
+    except (OSError, ValueError):
+        return None
+    turns = [t for t in d.get("turns") or [] if t.get("text")]
+    if not turns:
+        return None
+    working = d.get("state") == "working" and d.get("id") in _run_sid.values()
+    return {"title": d.get("title") or "agy session", "cwd": d.get("cwd") or str(HOME), "turns": turns,
+            "activity": d.get("activity", "") if working else "", "state": "working" if working else "idle",
+            "lastAt": turns[-1].get("ts") or "", "contextTokens": int(d.get("contextTokens") or 0), "model": d.get("model", ""),
+            "source": "app"}
+
+
+def scan_agy(uid, force=None, limit=None):
+    files = sorted(AGY_DIR.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True) if AGY_DIR.exists() else []
+    picked = files[: limit or CONFIG["max_sessions"]] + [p for p in files if p.stem == force]
+    running = set(_run_sid.values())
+    for p in picked:
+        sid, mtime = p.stem, p.stat().st_mtime
+        if sid in running and sid != force:
+            continue
+        key = (mtime, False, time.time() - mtime < 90, answered(sid, mtime))
+        if _uploaded.get(sid) == key and sid != force:
+            continue
+        try:
+            upload_session(uid, sid, p, mtime, key, limit, agent="agy")
+        except Exception as e:
+            _uploaded[sid] = key
+            log("agy session failed", sid[:8], e)
+
+
+def _agy_user_view(txt):
+    """The message as the app shows it: upload headers → 📎 file names / 🖼path: lines (published as images), like Claude's."""
+    tags, photos = [], []
+    if txt.startswith(FILE_HEAD):
+        head, _, txt = txt.partition("\n\n")
+        tags.append("📎 " + ", ".join(pathlib.Path(l).name for l in head.splitlines()[1:]))
+    if txt.startswith(PHOTO_HEAD):
+        head, _, txt = txt.partition("\n\n")
+        photos = [l.strip() for l in head.splitlines()[1:] if l.strip().startswith("/")]
+    if (photos or tags) and txt.strip() in ("Xem ảnh đính kèm.", "Xem file đính kèm.", "See the attached photo.", "See the attached file."):
+        txt = ""
+    if tags:
+        txt = (txt.strip() + "\n" + " · ".join(tags)).strip()
+    if photos:
+        txt = (txt.strip() + "\n" + "\n".join(f"🖼path:{x}" for x in photos)).strip()
+    return txt.strip() or "📎"
+
+
+def _agy_tool_line(info):
+    name, prm = str(info.get("name") or "tool"), info.get("parameters") or {}
+    arg = prm.get("CommandLine") or prm.get("Path") or prm.get("TargetFile") or prm.get("Query") or prm.get("Url") or ""
+    if not arg and prm:
+        arg = str(next(iter(prm.values())))
+    return f"🔧 {name}: " + " ⏎ ".join(l.strip() for l in str(arg).splitlines() if l.strip())[:200]
+
+
+def run_agy(uid, rid, req, sid, profile, cwd):
+    path = f"clo/{uid}/terminalInbox/{rid}"
+    if not CONFIG["agy"]:
+        return set_doc(path, {"status": "error", "error": "agy isn't installed on this Mac", "editedAt": now()}, ["status", "error", "editedAt"])
+    if req.get("fork") or req.get("child"):   # side questions / sub-sessions would run a 2nd agy turn on the same conversation
+        return set_doc(path, {"status": "error", "error": "btw and sub-sessions aren't available for agy sessions yet", "editedAt": now()},
+                       ["status", "error", "editedAt"])
+    conv = agy_load(sid) if sid else None
+    if sid and not conv:
+        return set_doc(path, {"status": "error", "error": "agy conversation not found on this Mac", "editedAt": now()}, ["status", "error", "editedAt"])
+    text = prompt_for(rid, req)
+    hints = ARTIFACT_HINT + (SECRET_HINT if (HOME / ".local/bin/remotecc-secret").exists() else "") + NOTIFY_HINT
+    model = agy_model(req)
+    # agy has no system-prompt flag: the RemoteCC hints ride on the first message only (the conversation keeps them).
+    first = not conv
+    cmd = [CONFIG["agy"], "--output-format", "stream-json", "--model", model] + agy_args(profile)
+    cmd += (["--conversation", sid] if sid else []) + ["--print=" + (f"[RemoteCC] {hints}\n\n---\n\n{text}" if first else text)]
+    log("run", rid[:8], "agy session", sid[:8] or "(new)", profile, model, cwd)
+    set_doc(path, {"status": "running", "startedAt": now(), "editedAt": now()}, ["status", "startedAt", "editedAt"])
+    view = _agy_user_view(text)
+    conv = conv or {"id": "", "cwd": cwd, "title": view.splitlines()[0][:100] if not view.startswith(("📎", "🖼")) else "agy session", "turns": []}
+    conv["turns"].append({"role": "user", "text": view, "ts": now().isoformat()})
+    conv.update(state="working", activity="Thinking…", model=model)
+    if conv.get("id"):
+        agy_save(conv)
+    try:
+        proc = subprocess.Popen(cmd, cwd=cwd, env=profile_env("agy"), stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, text=True, start_new_session=True)
+    except OSError as e:   # agy gone, prompt too long for argv (E2BIG)…
+        conv.update(state="idle", activity="")
+        if conv.get("id"):
+            conv["turns"].append({"role": "assistant", "text": f"⚠️ {e}", "ts": now().isoformat()})
+            agy_save(conv)
+        return set_doc(path, {"status": "error", "error": f"agy couldn't start: {e}"[:1500], "finishedAt": now(), "editedAt": now()},
+                       ["status", "error", "finishedAt", "editedAt"])
+    _running[rid] = proc
+    if sid:
+        _run_sid[rid] = sid
+    killer = threading.Timer(CONFIG["job_timeout"], lambda: os.killpg(proc.pid, signal.SIGTERM))
+    killer.start()
+    steps, order, new_sid, last_push, err, final = {}, [], sid, 0.0, None, ""
+    def reply_text():
+        return "\n\n".join(steps[k] for k in order if steps[k].strip()).strip()
+    try:
+        for line in proc.stdout:
+            try:
+                ev = json.loads(line)
+            except ValueError:
+                continue
+            if not isinstance(ev, dict):
+                continue
+            kind = ev.get("event")
+            if kind == "init" and ev.get("conversation_id") and not new_sid:
+                new_sid = ev["conversation_id"]
+                _run_sid[rid] = new_sid
+                conv["id"] = new_sid
+                agy_save(conv)
+            elif kind == "step_update":
+                su = ev.get("step_update") or {}
+                k, typ = su.get("step_index"), su.get("step_type")
+                if k not in steps and typ in ("agent_response", "tool"):
+                    steps[k] = ""
+                    order.append(k)
+                if typ == "agent_response" and su.get("text_delta"):
+                    steps[k] += su["text_delta"]   # every event (ACTIVE and the closing DONE) carries only new text
+                    conv["activity"] = "Writing…"
+                elif typ == "tool":
+                    info = su.get("tool_info") or {"name": su.get("tool_name")}
+                    steps[k] = _agy_tool_line(info) + (" ✗" if su.get("state") == "ERROR" else "")
+                    conv["activity"] = steps[k][2:].strip()[:120]
+                u = su.get("usage") or {}
+                if u.get("input_tokens"):
+                    conv["contextTokens"] = int(u.get("input_tokens") or 0) + int(u.get("cache_read_tokens") or 0)
+            elif kind == "result":
+                r = ev.get("result") or {}
+                final = r.get("response") or ""
+                if str(r.get("status") or "SUCCESS").upper() not in ("SUCCESS", "OK"):
+                    err = str(r.get("error") or r.get("status"))[:1500]
+            elif kind == "error":
+                err = str(ev.get("error") or ev.get("message") or "agy error")[:1500]
+            if time.time() - last_push > 1.5:
+                set_doc(path, {"reply": redact(reply_text()), "resultSessionId": new_sid, "editedAt": now()},
+                        ["reply", "resultSessionId", "editedAt"])
+                if conv.get("id"):
+                    agy_save(conv)
+                last_push = time.time()
+        proc.wait()
+    except Exception as e:   # never leave the conversation "working" or agy running untracked
+        err = f"bridge error: {e}"[:1500]
+        try:
+            os.killpg(proc.pid, signal.SIGTERM)
+        except OSError:
+            pass
+        proc.wait()
+    finally:
+        killer.cancel()
+        _running.pop(rid, None)
+        _run_sid.pop(rid, None)
+        _started.pop(rid, None)
+    cancelled = proc.returncode in (-signal.SIGTERM, -signal.SIGKILL) and not err or _stopped.pop(rid, False)
+    if not cancelled and not err and proc.returncode != 0:
+        err = (proc.stderr.read()[-1500:].strip() or f"agy exit {proc.returncode}")
+    status = "cancelled" if cancelled else "error" if err else "done"
+    reply = reply_text()
+    if final.strip() and final.strip() not in reply:
+        reply = (reply + "\n\n" + final.strip()).strip()
+    reply = redact(reply)
+    set_doc(path, {"reply": reply, "resultSessionId": new_sid, "status": status, "error": err or "", "finishedAt": now(), "editedAt": now()},
+            ["reply", "resultSessionId", "status", "error", "finishedAt", "editedAt"])
+    log("done", rid[:8], status, "agy", new_sid[:8] if new_sid else "")
+    if new_sid:
+        conv["turns"].append({"role": "assistant", "text": reply or (f"⚠️ {err}" if err else ""), "ts": now().isoformat()})
+        conv.update(state="idle", activity="")
+        agy_save(conv)
+    try:
+        if status != "cancelled":
+            last = next((l for l in reversed(reply.splitlines()) if l.strip() and not l.startswith("🔧")), "")
+            ptext = (redact(err)[:200] if err else "") or push_summary(reply)
+            notify(uid, "error" if err else "input" if last.rstrip().endswith("?") else "done", new_sid, conv.get("title", ""), ptext)
     except Exception as e:
         log("notify failed", e)
     if new_sid:
@@ -1899,6 +2152,8 @@ def run_request(uid, rid, req):
         return
     if (sid and codex_file(sid)) or (not sid and profile.startswith("codex")):
         return run_codex(uid, rid, req, sid, profile, cwd)   # the session's own agent decides, not the app's picker
+    if (sid and agy_file(sid)) or (not sid and profile.startswith("agy")):
+        return run_agy(uid, rid, req, sid, profile, cwd)
     fork = bool(req.get("fork")) and bool(sid)
     child = bool(req.get("child")) and bool(sid) and not fork  # sub-session: a fork that stays a session and reports back
     compacted = None
@@ -2509,7 +2764,7 @@ def prune_missing(uid):
     for d in r.get("documents", []):
         sid, f = d["name"].rsplit("/", 1)[-1], unfields(d)
         # Codex sessions live in ~/.codex, not PROJECTS: pruning them here re-uploaded every one on the next scan, all day
-        if f.get("machine") == CONFIG["machine"] and f.get("agent") != "codex" and not any(PROJECTS.glob(f"*/{sid}.jsonl")):
+        if f.get("machine") == CONFIG["machine"] and f.get("agent") not in ("codex", "agy") and not any(PROJECTS.glob(f"*/{sid}.jsonl")):
             api("DELETE", f"https://firestore.googleapis.com/v1/{d['name']}")
             _uploaded.pop(sid, None)
             log("pruned missing session", sid[:8])
@@ -3809,7 +4064,7 @@ def heartbeat(uid):
             # restart.sh waiting for running turns: new ones are held until then (the app says why they wait)
             "restarting": RESTART.exists(), "runningCount": len([r for r in _running if r not in _injected_ids]), "tools": [t for t in CLI_TOOLS if (HOME / ".local/bin" / t).exists()],
             "procs": _procs_safe(),
-            "features": ["inject", "skills", "openLoops", "saved", "child", "suggest", "effort", "environments", "signed", "secrets", "chat", "procs", "changes", "secretFetch", "memory", "github"] + (["codex"] if CONFIG["codex"] else [])})  # app only sends kinds a bridge understands
+            "features": ["inject", "skills", "openLoops", "saved", "child", "suggest", "effort", "environments", "signed", "secrets", "chat", "procs", "changes", "secretFetch", "memory", "github"] + (["codex"] if CONFIG["codex"] else []) + (["agy"] if CONFIG["agy"] else []) + ["models"]})  # app only sends kinds a bridge understands
 
 
 def self_update_loop():
