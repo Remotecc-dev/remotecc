@@ -903,6 +903,7 @@ def upload_session(uid, sid, p, mtime, key, limit, agent="claude"):
                "background": is_background(uid, sid, p) if agent == "claude" else (agent == "codex" and s.get("source") == "exec" and sid not in app_sessions(uid)),
                "contextTokens": context_tokens(sid) if agent == "claude" else s.get("contextTokens", 0),
                "agent": agent, "model": s.get("model", ""),
+               "tokensUsed": int(s.get("tokens") or 0),   # agy: all tokens of the session (it reports no cost)
                # background agents/commands still running after the answer (the claude process is still up)
                "bgTasks": ((bg_tasks(p, claude_alive(sid)) if agent == "claude" and claude_alive(sid) is not None else [])
                            + child_claudes().get(sid, []))[-5:],
@@ -1287,6 +1288,7 @@ def parse_agy(path):
     return {"title": d.get("title") or "agy session", "cwd": d.get("cwd") or str(HOME), "turns": turns,
             "activity": d.get("activity", "") if working else "", "state": "working" if working else "idle",
             "lastAt": turns[-1].get("ts") or "", "contextTokens": int(d.get("contextTokens") or 0), "model": d.get("model", ""),
+            "tokens": int(d.get("tokens") or 0),
             "source": "app"}
 
 
@@ -1334,6 +1336,100 @@ def _agy_tool_line(info):
     return f"🔧 {name}: " + " ⏎ ".join(l.strip() for l in str(arg).splitlines() if l.strip())[:200]
 
 
+# ---- agy (Gemini) usage: agy reports tokens per turn but no plan limits, so the bridge keeps its own count per day,
+# and the limit Google answers with once it's reached ("Individual quota reached … Resets in 15h45m40s").
+AGY_USAGE = STATE / "agy-usage.json"
+_agy_usage_lock = threading.Lock()
+QUOTA_RE = re.compile(r"(RESOURCE_EXHAUSTED|quota reached|quota exceeded|exhausted your quota)", re.I)
+RESETS_RE = re.compile(r"Resets in\s+((?:\d+(?:\.\d+)?\s*[hms]\s*)+)", re.I)   # "15h45m40s", at least one part
+
+
+def _agy_usage_read():
+    try:
+        d = json.loads(AGY_USAGE.read_text())
+        return d if isinstance(d, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def _agy_usage_write(d):
+    AGY_USAGE.parent.mkdir(parents=True, exist_ok=True)
+    tmp = AGY_USAGE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(d))
+    os.replace(tmp, AGY_USAGE)
+
+
+def agy_count(tokens):
+    """Adds one turn's tokens to today's count (local date); keeps 14 days."""
+    if not tokens:
+        return
+    with _agy_usage_lock:
+        d = _agy_usage_read()
+        days = d.get("days") or {}
+        today = dt.date.today().isoformat()
+        day = days.get(today) or {"tokens": 0, "turns": 0}
+        day["tokens"] = int(day.get("tokens") or 0) + int(tokens)
+        day["turns"] = int(day.get("turns") or 0) + 1
+        days[today] = day
+        d["days"] = {k: days[k] for k in sorted(days)[-14:]}
+        _agy_usage_write(d)
+
+
+def agy_quota(text, model):
+    """An agy error that is Google's quota answer → (a clear message, when it resets or None); else None. Remembers it
+    per model until the reset so the app can show the limit before the next try."""
+    if not text or not QUOTA_RE.search(text):
+        return None
+    until = None
+    m = RESETS_RE.search(text)
+    if m:
+        secs = 0.0
+        for n, unit in re.findall(r"(\d+(?:\.\d+)?)\s*([hms])", m.group(1), re.I):
+            secs += float(n) * {"h": 3600, "m": 60, "s": 1}[unit.lower()]
+        if secs > 0:
+            until = dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=secs)
+    with _agy_usage_lock:
+        d = _agy_usage_read()
+        limits = d.get("limits") or {}
+        limits[model] = {"until": until.isoformat() if until else "", "at": now().isoformat()}
+        d["limits"] = limits
+        _agy_usage_write(d)
+    when = ""
+    if until:
+        left = max(0, int((until - dt.datetime.now(dt.timezone.utc)).total_seconds()))
+        when = f" — resets in {left // 3600}h{(left % 3600) // 60:02d}m (at {until.astimezone().strftime('%H:%M')})"
+    return f"Gemini limit reached for {model}{when}. Pick another model (Carbon / Flash) or wait.", until
+
+
+def agy_quota_clear(model):
+    with _agy_usage_lock:
+        d = _agy_usage_read()
+        if model in (d.get("limits") or {}):
+            d["limits"].pop(model)
+            _agy_usage_write(d)
+
+
+def agy_usage():
+    """Heartbeat: {today, week, turnsToday, limits: [{model, until}]} — limits still in force only."""
+    d = _agy_usage_read()
+    days = d.get("days") or {}
+    today = dt.date.today()
+    week = sum(int((days.get((today - dt.timedelta(days=i)).isoformat()) or {}).get("tokens") or 0) for i in range(7))
+    t = days.get(today.isoformat()) or {}
+    nowu = dt.datetime.now(dt.timezone.utc)
+    limits = []
+    for model, v in (d.get("limits") or {}).items():
+        try:
+            until = dt.datetime.fromisoformat(v.get("until")) if v.get("until") else None
+            at = dt.datetime.fromisoformat(v.get("at"))
+        except (TypeError, ValueError):
+            continue
+        # no reset time given: shown for 1 h after it was hit
+        if (until and until > nowu) or (not until and nowu - at < dt.timedelta(hours=1)):
+            limits.append({"model": model, "until": v.get("until") or ""})
+    return {"today": int(t.get("tokens") or 0), "turnsToday": int(t.get("turns") or 0), "week": week, "limits": limits}
+
+
 def run_agy(uid, rid, req, sid, profile, cwd):
     path = f"clo/{uid}/terminalInbox/{rid}"
     if not CONFIG["agy"]:
@@ -1374,7 +1470,7 @@ def run_agy(uid, rid, req, sid, profile, cwd):
         _run_sid[rid] = sid
     killer = threading.Timer(CONFIG["job_timeout"], lambda: os.killpg(proc.pid, signal.SIGTERM))
     killer.start()
-    steps, order, new_sid, last_push, err, final = {}, [], sid, 0.0, None, ""
+    steps, order, new_sid, last_push, err, final, used = {}, [], sid, 0.0, None, "", 0
     def reply_text():
         return "\n\n".join(steps[k] for k in order if steps[k].strip()).strip()
     try:
@@ -1410,6 +1506,7 @@ def run_agy(uid, rid, req, sid, profile, cwd):
             elif kind == "result":
                 r = ev.get("result") or {}
                 final = r.get("response") or ""
+                used = int((r.get("usage") or {}).get("total_tokens") or 0)
                 if str(r.get("status") or "SUCCESS").upper() not in ("SUCCESS", "OK"):
                     err = str(r.get("error") or r.get("status"))[:1500]
             elif kind == "error":
@@ -1434,10 +1531,27 @@ def run_agy(uid, rid, req, sid, profile, cwd):
         _run_sid.pop(rid, None)
         _started.pop(rid, None)
     cancelled = proc.returncode in (-signal.SIGTERM, -signal.SIGKILL) and not err or _stopped.pop(rid, False)
-    if not cancelled and not err and proc.returncode != 0:
-        err = (proc.stderr.read()[-1500:].strip() or f"agy exit {proc.returncode}")
-    status = "cancelled" if cancelled else "error" if err else "done"
+    stderr = ""
+    if not cancelled and (err or proc.returncode != 0):
+        try:
+            stderr = proc.stderr.read()[-4000:]   # the quota details may be only here
+        except (OSError, ValueError):
+            pass
+        if not err:
+            err = (stderr[-1500:].strip() or f"agy exit {proc.returncode}")
     reply = reply_text()
+    conv["tokens"] = int(conv.get("tokens") or 0) + used
+    try:   # usage bookkeeping must never leave the conversation "working"
+        agy_count(used)
+        if not cancelled and err:
+            q = agy_quota("\n".join([err, stderr]), model)   # only a failed turn: a reply may talk about quotas
+            if q:
+                err = q[0]   # Google's quota answer → a clear "limit reached, resets at…" instead of a raw API error
+        elif not cancelled:
+            agy_quota_clear(model)   # this model answered: no limit in force
+    except Exception as e:
+        log("agy usage failed", e)
+    status = "cancelled" if cancelled else "error" if err else "done"
     if final.strip() and final.strip() not in reply:
         reply = (reply + "\n\n" + final.strip()).strip()
     reply = redact(reply)
@@ -4061,7 +4175,8 @@ def heartbeat(uid):
     set_doc(f"clo/{uid}/bridge/{CONFIG['machine']}", {"machine": CONFIG["machine"], "label": CONFIG["label"] or CONFIG["machine"],
             "lastSeen": now(), "cwds": recent_cwds(), "projects": project_dirs(), "slashCommands": _slash["list"],
             "profiles": ["claude-yolo", "claude"], "home": str(HOME), "access": tunnel_mod.setting("access"),
-            "version": _version(), "usage": claude_usage() or {}, "codexUsage": (codex_usage() if CONFIG["codex"] else None) or {}, "ramUsed": ram_used_pct(), "cpuTemp": cpu_temp(),
+            "version": _version(), "usage": claude_usage() or {}, "codexUsage": (codex_usage() if CONFIG["codex"] else None) or {},
+            "agyUsage": agy_usage() if CONFIG["agy"] else {}, "ramUsed": ram_used_pct(), "cpuTemp": cpu_temp(),
             "diskUsed": disk_pct, "diskFree": disk_free, "license": owner_license(), "secretKey": _secret_key(), "signKey": _sign_key(),
             # restart.sh waiting for running turns: new ones are held until then (the app says why they wait)
             "restarting": RESTART.exists(), "runningCount": len([r for r in _running if r not in _injected_ids]), "tools": [t for t in CLI_TOOLS if (HOME / ".local/bin" / t).exists()],

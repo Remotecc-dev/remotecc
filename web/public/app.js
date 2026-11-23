@@ -1094,7 +1094,20 @@ function renderStatus() {
   const usage = codex ? b?.codexUsage : ag === "claude" ? b?.usage : null, wins = usage?.windows || [];
   if (ag !== "claude") st.append(el("span", "muted", AGENT_LABEL[ag]));
   if (ag !== "claude" && s?.model) st.append(el("span", "muted", s.model));
-  if (!wins.length) st.append(el("span", "muted", codex ? (usage?.plan || "ChatGPT") : ag === "agy" ? "Gemini" : "Gói Claude"));   // bridge hasn't reported limits yet
+  if (ag === "agy") {   // agy reports no plan limits: tokens counted by the bridge, and Google's limit once it's hit
+    const au = b?.agyUsage || {}, fmt = (n) => n >= 1e6 ? (n / 1e6).toFixed(1) + "M" : n >= 1e3 ? Math.round(n / 1e3) + "k" : String(n || 0);
+    st.append(el("span", "muted", "Gemini"));
+    const x = el("span"); x.title = `Token agy đã dùng: hôm nay ${fmt(au.today)} (${au.turnsToday || 0} lượt) · 7 ngày ${fmt(au.week)}`;
+    x.append(el("span", "muted", "hôm nay "), el("b", null, fmt(au.today))); st.append(x);
+    if (Number(s?.tokensUsed || 0) > 0) st.append(Object.assign(el("span", "muted", "phiên " + fmt(Number(s.tokensUsed))), { title: "Token cả phiên" }));
+    for (const l of au.limits || []) {
+      const d = l.until ? new Date(l.until) : null;
+      if (d && (isNaN(d) || d <= Date.now())) continue;   // reset already (the Mac's last heartbeat may be old)
+      const hm = d ? d.toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit" }) : "";
+      st.append(Object.assign(el("b", "low", `⛔ ${l.model.replace(/^gemini-/, "")} hết hạn mức${hm ? " ↻" + hm : ""}`),
+        { title: "Google báo hết hạn mức cho model này — chọn model khác (Carbon / Flash) hoặc chờ" }));
+    }
+  } else if (!wins.length) st.append(el("span", "muted", codex ? (usage?.plan || "ChatGPT") : "Gói Claude"));   // bridge hasn't reported limits yet
   else {
     if (usage.plan) st.append(el("span", "muted", usage.plan));
     for (const w of wins) {

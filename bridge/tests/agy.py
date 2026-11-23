@@ -29,6 +29,27 @@ check("model: max → the family's top level", m({"model": "neon", "effort": "ma
 check("model: no effort → medium; nothing picked → the Mac's default", m({"model": "flash"}) == "gemini-3.8-flash-medium"
       and m({}) == "gemini-4-neon-medium" and m({"model": "claude-opus-5-5"}) == "gemini-4-neon-medium")
 
+# agy usage + quota (no agy run): tokens per day, Google's "quota reached … Resets in" → a clear limit until the reset
+import datetime as _dt, tempfile, threading
+start, end = src.index("AGY_USAGE = "), src.index("def run_agy(")
+tmpdir = pathlib.Path(tempfile.mkdtemp())
+uns = {"re": __import__("re"), "json": __import__("json"), "os": os, "dt": _dt, "threading": threading, "STATE": tmpdir,
+       "now": lambda: _dt.datetime.now(_dt.timezone.utc)}
+exec(src[start:end], uns)
+uns["agy_count"](1200); uns["agy_count"](800)
+u = uns["agy_usage"]()
+check("usage: today's tokens and turns add up", u["today"] == 2000 and u["turnsToday"] == 2 and u["week"] == 2000, u)
+raw = "agent executor error: model unreachable: RESOURCE_EXHAUSTED (code 429): Individual quota reached. Please upgrade your subscription to increase your limits. Resets in 15h45m40s.: RESOURCE_EXHAUSTED"
+msg, until = uns["agy_quota"](raw, "gemini-4-neon-medium")
+left = (until - _dt.datetime.now(_dt.timezone.utc)).total_seconds()
+check("quota: clear message with the reset time", "Gemini limit reached for gemini-4-neon-medium" in msg and "resets in 15h45m" in msg
+      and 15 * 3600 + 44 * 60 < left <= 15 * 3600 + 46 * 60, (msg, left))
+check("…listed as a limit in force", [l["model"] for l in uns["agy_usage"]()["limits"]] == ["gemini-4-neon-medium"])
+check("…an ordinary error isn't a quota", uns["agy_quota"]("agy exit 1: no such file", "x") is None)
+uns["agy_quota_clear"]("gemini-4-neon-medium")
+check("…cleared once that model answers again", uns["agy_usage"]()["limits"] == [])
+shutil.rmtree(tmpdir, ignore_errors=True)
+
 b = Bridge(7803, "agy")
 a = b.pair("agy phone")
 
@@ -117,4 +138,6 @@ check("stop works", st == "cancelled", st)
 machine = subprocess.run(["hostname", "-s"], capture_output=True, text=True).stdout.strip()
 feats = str((a.doc(f"clo/local/bridge/{machine}") or {}).get("features", ""))
 check("the bridge lists agy and per-message models in its features", "'agy'" in feats and "'models'" in feats, feats[:400])
+au = (((a.doc(f"clo/local/bridge/{machine}") or {}).get("agyUsage") or {}).get("mapValue") or {}).get("fields") or {}
+check("…and agy's usage today (tokens counted from these turns)", int((au.get("today") or {}).get("integerValue") or 0) > 0, au)
 done()
