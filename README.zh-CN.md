@@ -4,7 +4,8 @@
 <p align="center"><a href="README.md">English</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.es.md">Español</a> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a></p>
 <h1 align="center">RemoteCC</h1>
 <p align="center"><b>编程 Agent 的远程控制台。</b><br>
-在自己的电脑上运行 Claude Code 和 Codex，随时用手机或任意浏览器远程操控。<br>
+在自己的电脑上运行 Claude Code、Codex (ChatGPT) 和 Gemini (agy)，随时用手机或任意浏览器远程操控。<br>
+会话中随时切换模型：Claude Opus 5.5 · Fable 5.2 · GPT-6 Astra · GPT-5.6 · Gemini 4 Neon · Gemini 4 Carbon · Gemini 3.8 Flash。<br>
 端到端加密 · 无需账号 · 云端零存储 · 开源。</p>
 
 <p align="center">
@@ -28,7 +29,7 @@
 <p align="center"><b>支持的工具</b><br>
   <a href="https://remotecc.dev/claude-code"><img src="https://img.shields.io/badge/Claude%20Code-supported-D97757?logo=claude&logoColor=white" alt="Claude Code"></a>
   <a href="https://remotecc.dev/codex"><img src="https://img.shields.io/badge/Codex%20CLI-supported-111111?logo=openai&logoColor=white" alt="Codex CLI"></a>
-  <img src="https://img.shields.io/badge/more%20agents-on%20the%20roadmap-888" alt="更多 Agent 正在规划中">
+  <a href="https://remotecc.dev/gemini"><img src="https://img.shields.io/badge/Gemini%20(agy)-supported-4285F4?logo=googlegemini&logoColor=white" alt="Gemini through Antigravity agy"></a>
 </p>
 
 <p align="center">
@@ -39,7 +40,7 @@
 
 ## 核心功能
 
-- **实时掌控电脑上的所有 Agent 会话** —— 用手机、平板或另一台电脑发起、查看并回复会话：流式输出、工具调用、交互提问、文件和图片都汇聚在清爽统一的聊天界面中。
+- **实时掌控电脑上的所有 Agent 会话**（Claude Code、Codex、通过 agy 运行的 Gemini）—— 用手机、平板或另一台电脑发起、查看并回复会话：流式输出、工具调用、交互提问、文件和图片都汇聚在清爽统一的聊天界面中。
 - **用量额度一目了然** —— 实时查看套餐剩余额度（5 小时及每周周期与重置时间），以及每个会话的 token 消耗和费用。
 - **监控主机状态** —— 随时查看运行任务的电脑内存占用、CPU 温度和剩余磁盘空间。
 - **高效并行协作** —— 支持子会话和分支，可用 **btw** 随时发起旁路提问，还支持通过点头或比出手指快速回复。
@@ -78,7 +79,7 @@
    ```
 
 2. 在浏览器中打开 **[remotecc.dev](https://remotecc.dev)**。在同一台电脑上会自动完成配对；如需从其他设备连接，请运行 `remotecc pair`，并用手机相机或 iPhone 客户端扫描二维码。
-3. 选择项目并发送消息。Claude Code（或 Codex）会在你的电脑上运行，你可以实时查看完整过程。
+3. 选择项目和 Agent，发送消息。Claude Code、Codex 或 agy 会在你的电脑上运行，你可以实时查看完整过程。
 
 ### 打开网页应用的两种方式
 

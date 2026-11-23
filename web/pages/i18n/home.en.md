@@ -1,13 +1,14 @@
 ---
-title: RemoteCC — remote control for Claude Code and Codex from your phone or any browser
-description: RemoteCC lets you control Claude Code and Codex sessions on your own computer from your phone or any browser. End-to-end encrypted, no account, free and open source.
+title: RemoteCC — remote control for Claude Code, Codex (ChatGPT) and Gemini from your phone or any browser
+description: RemoteCC lets you control Claude Code, Codex (ChatGPT) and Gemini (agy) sessions on your own computer from your phone or any browser. End-to-end encrypted, no account, free and open source.
 ---
 # RemoteCC: the remote control for your coding agents
 
-Run Claude Code and Codex on your own computer, and drive them from your phone, tablet or any browser. End-to-end encrypted, no account, nothing stored in the cloud. Free and open source (Apache-2.0).
+Run Claude Code, Codex (with your ChatGPT plan) and Gemini (Google Antigravity's agy) on your own computer, and drive them from your phone, tablet or any browser. End-to-end encrypted, no account, nothing stored in the cloud. Free and open source (Apache-2.0).
 
 ## What you get
-- **Remote control for Claude Code**: start, watch and answer sessions live. Output, approvals, files and images in one clean chat view.
+- **One remote for every agent**: Claude Code, Codex and Gemini. Start, watch and answer sessions live: output, tool calls, files and images in one clean chat view.
+- **The best models, switchable mid-session**: Claude Opus 5.5 and Fable 5.2, GPT-6 Astra and GPT-5.6, Gemini 4 Neon, Gemini 4 Carbon and Gemini 3.8 Flash, with the effort level you choose.
 - **Claude usage at a glance**: plan limits left in the 5-hour and weekly windows with reset times, plus tokens and cost per session.
 - **Your computer's health**: RAM in use, CPU temperature and free disk space of the machine running Claude Code.
 - **Work in parallel**: child sessions and branches, side questions with **btw**, answer with a nod or a raised finger.
@@ -39,10 +40,10 @@ The web app's interface is in English; your sessions, of course, are in whatever
 ## FAQ
 **Does my code or chat go through a server?** No. Your device and your computer talk end-to-end encrypted. The relay that connects them only forwards ciphertext and stores nothing; on the same Wi-Fi or Tailscale they connect directly.
 
-**Is RemoteCC free?** Yes. The bridge, the web app and the relay are free and open source. You use your own Claude plan or API key with Claude Code.
+**Is RemoteCC free?** Yes. The bridge, the web app and the relay are free and open source. You use your own plans: Claude for Claude Code, ChatGPT for Codex, Google for Gemini.
 
 **Do I need an account?** No. Pairing a browser with your computer is all it takes.
 
-**Which computers does it run on?** macOS, Linux, and Windows through WSL2. Claude Code must be installed and signed in on that computer.
+**Which computers does it run on?** macOS, Linux, and Windows through WSL2. At least one agent (Claude Code, Codex or agy) must be installed and signed in on that computer.
 
 **Is it made by Anthropic?** No. RemoteCC is an independent open-source project. Claude and Claude Code are trademarks of Anthropic.

@@ -1,13 +1,14 @@
 ---
-title: RemoteCC — 用手机或浏览器远程控制 Claude Code 与 Codex
-description: RemoteCC 让你用手机或任意浏览器远程控制本机的 Claude Code 和 Codex。端到端加密，无需账号，免费开源。
+title: RemoteCC — 用手机或浏览器远程控制 Claude Code、Codex (ChatGPT) 与 Gemini
+description: RemoteCC 让你用手机或任意浏览器远程控制本机的 Claude Code、Codex (ChatGPT) 和 Gemini (agy) 会话。端到端加密，无需账号，免费开源。
 ---
 # RemoteCC：远程控制你的编程 Agent
 
-在自己的电脑上运行 Claude Code 和 Codex，用手机、平板或任意浏览器远程操控。端到端加密，无需注册账号，数据不存云端。免费且开源（Apache-2.0）。
+在自己的电脑上运行 Claude Code、Codex（使用你的 ChatGPT 套餐）和 Gemini（Google Antigravity 的 agy），用手机、平板或任意浏览器远程操控。端到端加密，无需注册账号，数据不存云端。免费且开源（Apache-2.0）。
 
 ## 核心功能
-- **远程控制 Claude Code**：实时启动、查看并回复会话。输出、权限审批、文件和图片全部呈现在清爽的聊天界面中。
+- **一个遥控器掌控所有 Agent**：支持 Claude Code、Codex 和 Gemini。实时启动、查看并回复会话：输出、工具调用、文件和图片全部呈现在清爽的聊天界面中。
+- **顶级模型，会话中随时切换**：支持 Claude Opus 5.5 与 Fable 5.2、GPT-6 Astra 与 GPT-5.6、Gemini 4 Neon、Gemini 4 Carbon 与 Gemini 3.8 Flash，并可自选推理强度。
 - **Claude 用量一目了然**：直观查看 5 小时和每周额度余量及重置时间，以及每次会话的 Token 消耗与费用。
 - **电脑运行状态**：实时掌握运行 Claude Code 的机器的内存占用、CPU 温度与可用磁盘空间。
 - **多任务并行**：支持子会话与分支，使用 **btw** 随时旁白提问，点头或举起手指即可回应。
@@ -39,10 +40,10 @@ Web 应用的界面为英文；当然，你与 Claude 的会话完全取决于�
 ## 常见问题
 **我的代码或对话会经过服务器吗？** 不会。你的设备与电脑之间全程端到端加密。负责连接的中继仅转发密文，不存储任何内容；在同一 Wi-Fi 或 Tailscale 下会直接连接。
 
-**RemoteCC 免费吗？** 是的。桥接程序、Web 应用和中继均免费开源。你在 Claude Code 中继续使用自己的 Claude 套餐或 API 密钥即可。
+**RemoteCC 免费吗？** 是的。桥接程序、Web 应用和中继均免费开源。你继续使用自己的订阅套餐即可：Claude Code 使用 Claude、Codex 使用 ChatGPT、Gemini 使用 Google。
 
 **需要注册账号吗？** 不需要。将浏览器与电脑配对即可使用。
 
-**支持哪些电脑？** macOS、Linux，以及通过 WSL2 运行的 Windows。该电脑需已安装并登录 Claude Code。
+**支持哪些电脑？** macOS、Linux，以及通过 WSL2 运行的 Windows。该电脑需至少安装并登录一个 Agent（Claude Code、Codex 或 agy）。
 
 **这是 Anthropic 官方出品的吗？** 不是。RemoteCC 是独立的开源项目。Claude 和 Claude Code 是 Anthropic 的商标。

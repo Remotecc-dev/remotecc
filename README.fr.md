@@ -4,7 +4,8 @@
 <p align="center"><a href="README.md">English</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.es.md">Español</a> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a></p>
 <h1 align="center">RemoteCC</h1>
 <p align="center"><b>La télécommande pour vos agents de code.</b><br>
-Exécutez Claude Code et Codex sur votre propre ordinateur — pilotez-les depuis votre téléphone ou n'importe quel navigateur.<br>
+Exécutez Claude Code, Codex (ChatGPT) et Gemini (agy) sur votre propre ordinateur — pilotez-les depuis votre téléphone ou n'importe quel navigateur.<br>
+Changez de modèle en cours de session : Claude Opus 5.5 · Fable 5.2 · GPT-6 Astra · GPT-5.6 · Gemini 4 Neon · Gemini 4 Carbon · Gemini 3.8 Flash.<br>
 Chiffré de bout en bout · sans compte · rien stocké dans le cloud · open source.</p>
 
 <p align="center">
@@ -28,7 +29,7 @@ Chiffré de bout en bout · sans compte · rien stocké dans le cloud · open so
 <p align="center"><b>Compatible avec</b><br>
   <a href="https://remotecc.dev/claude-code"><img src="https://img.shields.io/badge/Claude%20Code-supported-D97757?logo=claude&logoColor=white" alt="Claude Code"></a>
   <a href="https://remotecc.dev/codex"><img src="https://img.shields.io/badge/Codex%20CLI-supported-111111?logo=openai&logoColor=white" alt="Codex CLI"></a>
-  <img src="https://img.shields.io/badge/more%20agents-on%20the%20roadmap-888" alt="D'autres agents prévus sur la feuille de route">
+  <a href="https://remotecc.dev/gemini"><img src="https://img.shields.io/badge/Gemini%20(agy)-supported-4285F4?logo=googlegemini&logoColor=white" alt="Gemini through Antigravity agy"></a>
 </p>
 
 <p align="center">
@@ -39,7 +40,7 @@ Chiffré de bout en bout · sans compte · rien stocké dans le cloud · open so
 
 ## Ce que vous obtenez
 
-- **Toutes les sessions d'agents sur votre ordinateur, en direct** — démarrez, suivez et répondez depuis votre téléphone, tablette ou un autre ordinateur portable : sortie en streaming, appels d'outils, questions, fichiers et images dans une interface de chat épurée.
+- **Toutes les sessions d'agents sur votre ordinateur, en direct** (Claude Code, Codex, Gemini via agy) — démarrez, suivez et répondez depuis votre téléphone, tablette ou un autre ordinateur portable : sortie en streaming, appels d'outils, questions, fichiers et images dans une interface de chat épurée.
 - **Suivez vos quotas** — consommation restante du forfait (fenêtres de 5 heures et hebdomadaires, heures de réinitialisation), tokens et coût par session.
 - **Surveillez votre machine** — RAM utilisée, température du CPU et espace disque libre de l'ordinateur qui exécute les tâches.
 - **Travaillez en parallèle** — sessions enfants et branches, questions rapides en aparté avec **btw**, réponses d'un hochement de tête ou en levant les doigts.
@@ -78,7 +79,7 @@ Demandez ensuite : *« Configure RemoteCC pour que je puisse l'utiliser depuis m
    ```
 
 2. Ouvrez **[remotecc.dev](https://remotecc.dev)** dans un navigateur. Sur le même ordinateur, l'appairage se fait tout seul ; depuis un autre appareil, lancez `remotecc pair` et scannez le QR code avec l'appareil photo du téléphone ou l'app iPhone.
-3. Choisissez un projet, envoyez un message. Claude Code (ou Codex) tourne sur votre ordinateur ; vous le voyez en direct.
+3. Choisissez un projet et un agent, envoyez un message. Claude Code, Codex ou agy tourne sur votre ordinateur ; vous le voyez en direct.
 
 ### Deux façons d'ouvrir l'application web
 

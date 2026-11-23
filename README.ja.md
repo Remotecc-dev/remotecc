@@ -4,7 +4,8 @@
 <p align="center"><a href="README.md">English</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.es.md">Español</a> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a></p>
 <h1 align="center">RemoteCC</h1>
 <p align="center"><b>コーディングエージェントのリモートコントロール。</b><br>
-自分のパソコンで Claude Code や Codex を動かし、スマホや任意のブラウザから操作できます。<br>
+自分のパソコンで Claude Code、Codex (ChatGPT)、Gemini (agy) を動かし、スマホや任意のブラウザから操作できます。<br>
+セッション中でもモデルを切り替え可能：Claude Opus 5.5 · Fable 5.2 · GPT-6 Astra · GPT-5.6 · Gemini 4 Neon · Gemini 4 Carbon · Gemini 3.8 Flash。<br>
 エンドツーエンド暗号化 · アカウント不要 · クラウド保存なし · オープンソース。</p>
 
 <p align="center">
@@ -28,7 +29,7 @@
 <p align="center"><b>対応エージェント</b><br>
   <a href="https://remotecc.dev/claude-code"><img src="https://img.shields.io/badge/Claude%20Code-supported-D97757?logo=claude&logoColor=white" alt="Claude Code"></a>
   <a href="https://remotecc.dev/codex"><img src="https://img.shields.io/badge/Codex%20CLI-supported-111111?logo=openai&logoColor=white" alt="Codex CLI"></a>
-  <img src="https://img.shields.io/badge/more%20agents-on%20the%20roadmap-888" alt="その他のエージェントもロードマップに追加予定">
+  <a href="https://remotecc.dev/gemini"><img src="https://img.shields.io/badge/Gemini%20(agy)-supported-4285F4?logo=googlegemini&logoColor=white" alt="Gemini through Antigravity agy"></a>
 </p>
 
 <p align="center">
@@ -39,7 +40,7 @@
 
 ## 主な機能
 
-- **パソコン上の全エージェントセッションをリアルタイム操作** — スマホ、タブレット、別のノート PC からセッションの開始・閲覧・応答が可能。ストリーミング出力、ツール呼び出し、質問、ファイル、画像を見やすいチャット画面に集約します。
+- **パソコン上の全エージェントセッションをリアルタイム操作**（Claude Code、Codex、agy 経由の Gemini）— スマホ、タブレット、別のノート PC からセッションの開始・閲覧・応答が可能。ストリーミング出力、ツール呼び出し、質問、ファイル、画像を見やすいチャット画面に集約します。
 - **利用枠をひと目で把握** — プランの残り使用量（5 時間枠・週間枠とリセット時刻）、セッションごとのトークン数とコストを確認できます。
 - **マシンの状態を監視** — 作業を実行しているパソコンのメモリ使用量、CPU 温度、空きディスク容量をリアルタイム表示。
 - **並行作業をスムーズに** — 子セッションやブランチ管理、**btw** でのちょっとした横道質問、うなずきや指を上げるジェスチャーでの応答に対応。
@@ -78,7 +79,7 @@ RemoteCC のインストールとセットアップを Claude に任せられま
    ```
 
 2. ブラウザで **[remotecc.dev](https://remotecc.dev)** を開きます。同じパソコン上では自動でペアリングされます。別デバイスから接続する場合は `remotecc pair` を実行し、スマホのカメラまたは iPhone アプリで QR コードをスキャンしてください。
-3. プロジェクトを選んでメッセージを送信します。Claude Code（または Codex）が自分のパソコン上で動作し、その様子をリアルタイムに確認できます。
+3. プロジェクトとエージェントを選んでメッセージを送信します。Claude Code、Codex、または agy が自分のパソコン上で動作し、その様子をリアルタイムに確認できます。
 
 ### Web アプリを開く 2 つの方法
 

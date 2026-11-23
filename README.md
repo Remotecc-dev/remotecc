@@ -4,7 +4,8 @@
 <p align="center"><a href="README.md">English</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.es.md">Español</a> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a></p>
 <h1 align="center">RemoteCC</h1>
 <p align="center"><b>The remote control for your coding agents.</b><br>
-Run Claude Code and Codex on your own computer — drive them from your phone or any browser.<br>
+Run Claude Code, Codex (ChatGPT) and Gemini (agy) on your own computer — drive them from your phone or any browser.<br>
+Switch models mid-session: Claude Opus 5.5 · Fable 5.2 · GPT-6 Astra · GPT-5.6 · Gemini 4 Neon · Gemini 4 Carbon · Gemini 3.8 Flash.<br>
 End-to-end encrypted · no account · nothing stored in the cloud · open source.</p>
 
 <p align="center">
@@ -28,7 +29,7 @@ End-to-end encrypted · no account · nothing stored in the cloud · open source
 <p align="center"><b>Works with</b><br>
   <a href="https://remotecc.dev/claude-code"><img src="https://img.shields.io/badge/Claude%20Code-supported-D97757?logo=claude&logoColor=white" alt="Claude Code"></a>
   <a href="https://remotecc.dev/codex"><img src="https://img.shields.io/badge/Codex%20CLI-supported-111111?logo=openai&logoColor=white" alt="Codex CLI"></a>
-  <img src="https://img.shields.io/badge/more%20agents-on%20the%20roadmap-888" alt="More agents on the roadmap">
+  <a href="https://remotecc.dev/gemini"><img src="https://img.shields.io/badge/Gemini%20(agy)-supported-4285F4?logo=googlegemini&logoColor=white" alt="Gemini through Antigravity agy"></a>
 </p>
 
 <p align="center">
@@ -39,7 +40,7 @@ End-to-end encrypted · no account · nothing stored in the cloud · open source
 
 ## What you get
 
-- **Every agent session on your computer, live** — start, watch and answer from your phone, tablet or another laptop:
+- **Every agent session on your computer, live** (Claude Code, Codex, Gemini via agy) — start, watch and answer from your phone, tablet or another laptop:
   streaming output, tool calls, questions, files and images in one clean chat view.
 - **Know your limits** — plan usage left (5-hour and weekly windows, reset times), tokens and cost per session.
 - **Watch your machine** — RAM in use, CPU temperature and free disk space of the computer doing the work.
@@ -84,7 +85,7 @@ Remotecc-dev/remotecc`, then `/plugin install remotecc@remotecc`.)
 2. Open **[remotecc.dev](https://remotecc.dev)** in a browser. On the same computer it pairs by itself; from another
    device run `remotecc pair` and scan the QR code with the
    phone camera or the iPhone app.
-3. Pick a project, send a message. Claude Code (or Codex) runs on your computer; you see it live.
+3. Pick a project and an agent, send a message. Claude Code, Codex or agy runs on your computer; you see it live.
 
 ### Two ways to open the web app
 

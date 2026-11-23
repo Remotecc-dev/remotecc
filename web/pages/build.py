@@ -11,7 +11,7 @@ PUB = HERE.parent / "public"
 GH_REPO, GH_ORG = "https://github.com/Remotecc-dev/remotecc", "https://github.com/Remotecc-dev"
 APP_STORE = "https://apps.apple.com/app/id6797019430"
 SITE = "https://remotecc.dev"
-NAV = [("claude-code", "Claude Code"), ("codex", "Codex"), ("claude-code-remote-control", "Remote control"), ("claude-code-on-iphone", "On iPhone"),
+NAV = [("claude-code", "Claude Code"), ("codex", "Codex"), ("gemini", "Gemini"), ("claude-code-remote-control", "Remote control"), ("claude-code-on-iphone", "On iPhone"),
        ("claude-code-from-browser", "In the browser"), ("claude-code-over-tailscale", "Over Tailscale"),
        ("how-it-works", "How it works"), ("security", "Security")]
 EXTRA = ["/", "/install.md", "/windows", "/windows.md", "/vibe-guide", "/privacy", "/terms", "/support"]

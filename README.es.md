@@ -4,7 +4,8 @@
 <p align="center"><a href="README.md">English</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.es.md">Español</a> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a></p>
 <h1 align="center">RemoteCC</h1>
 <p align="center"><b>El control remoto para tus agentes de programación.</b><br>
-Ejecuta Claude Code y Codex en tu propio ordenador y contrólalos desde tu teléfono o cualquier navegador.<br>
+Ejecuta Claude Code, Codex (ChatGPT) y Gemini (agy) en tu propio ordenador y contrólalos desde tu teléfono o cualquier navegador.<br>
+Cambia de modelo en mitad de una sesión: Claude Opus 5.5 · Fable 5.2 · GPT-6 Astra · GPT-5.6 · Gemini 4 Neon · Gemini 4 Carbon · Gemini 3.8 Flash.<br>
 Cifrado de extremo a extremo · sin cuentas · nada guardado en la nube · código abierto.</p>
 
 <p align="center">
@@ -28,7 +29,7 @@ Cifrado de extremo a extremo · sin cuentas · nada guardado en la nube · códi
 <p align="center"><b>Compatible con</b><br>
   <a href="https://remotecc.dev/claude-code"><img src="https://img.shields.io/badge/Claude%20Code-supported-D97757?logo=claude&logoColor=white" alt="Claude Code"></a>
   <a href="https://remotecc.dev/codex"><img src="https://img.shields.io/badge/Codex%20CLI-supported-111111?logo=openai&logoColor=white" alt="Codex CLI"></a>
-  <img src="https://img.shields.io/badge/more%20agents-on%20the%20roadmap-888" alt="Más agentes en la hoja de ruta">
+  <a href="https://remotecc.dev/gemini"><img src="https://img.shields.io/badge/Gemini%20(agy)-supported-4285F4?logo=googlegemini&logoColor=white" alt="Gemini through Antigravity agy"></a>
 </p>
 
 <p align="center">
@@ -39,7 +40,7 @@ Cifrado de extremo a extremo · sin cuentas · nada guardado en la nube · códi
 
 ## Qué obtienes
 
-- **Todas las sesiones de tus agentes, en directo** — inicia, sigue y responde desde tu teléfono, tablet u otro portátil: salida en streaming, llamadas a herramientas, preguntas, archivos e imágenes en una vista de chat limpia.
+- **Todas las sesiones de tus agentes, en directo** (Claude Code, Codex, Gemini a través de agy) — inicia, sigue y responde desde tu teléfono, tablet u otro portátil: salida en streaming, llamadas a herramientas, preguntas, archivos e imágenes en una vista de chat limpia.
 - **Controla tus límites** — uso restante del plan (ventanas de 5 horas y semanales, con horarios de reinicio), tokens y coste por sesión.
 - **Vigila tu equipo** — RAM en uso, temperatura de la CPU y espacio libre en disco del ordenador que ejecuta el trabajo.
 - **Trabaja en paralelo** — sesiones hijas y ramas, preguntas rápidas al margen con **btw**, y respuestas con un gesto de cabeza o levantando los dedos.
@@ -78,7 +79,7 @@ Luego pídele: *"Configura RemoteCC para que pueda usarlo desde mi teléfono."* 
    ```
 
 2. Abre **[remotecc.dev](https://remotecc.dev)** en un navegador. En el mismo ordenador se empareja automáticamente; desde otro dispositivo ejecuta `remotecc pair` y escanea el código QR con la cámara del teléfono o la app de iPhone.
-3. Elige un proyecto y envía un mensaje. Claude Code (o Codex) se ejecuta en tu ordenador y tú lo ves en directo.
+3. Elige un proyecto y un agente, y envía un mensaje. Claude Code, Codex o agy se ejecuta en tu ordenador y tú lo ves en directo.
 
 ### Dos formas de abrir la aplicación web
 

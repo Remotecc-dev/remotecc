@@ -31,4 +31,4 @@ Open [remotecc.dev](https://remotecc.dev) on that computer (it pairs by itself),
 code with your phone. Details: [install guide](/install.md) · [Windows](/windows) · [Tailscale](/claude-code-over-tailscale).
 
 ## Also works with
-[Codex](/codex) — the same remote for OpenAI's Codex CLI, side by side with Claude Code.
+[Codex](/codex) — the same remote for OpenAI's Codex CLI (ChatGPT plan) · [Gemini](/gemini) — Google Antigravity's agy CLI with Gemini 4 Neon.

@@ -21,7 +21,7 @@ signed in there, Codex appears as an agent in the RemoteCC web app and the iPhon
 3. Open [remotecc.dev](https://remotecc.dev) and pick **Codex** when starting a session.
 
 ## Also works with
-[Claude Code](/claude-code). More coding agents are on the roadmap — RemoteCC aims to be the remote control for every
+[Claude Code](/claude-code) and [Gemini (agy)](/gemini). More coding agents are on the roadmap — RemoteCC aims to be the remote control for every
 coding agent that runs on your own machine.
 
 ---
