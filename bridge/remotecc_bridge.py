@@ -661,7 +661,7 @@ def compact_session(uid, rid, sid, cwd, profile):
     path = f"clo/{uid}/terminalInbox/{rid}"
     set_doc(path, {"reply": f"🗜 Long session ({tokens // 1000}k tokens) — compacting before running…", "editedAt": now()}, ["reply", "editedAt"])
     log("compact", sid[:8], tokens)
-    cmd = [CONFIG["claude"], "-p", "--output-format", "stream-json", "--verbose", "--resume", sid] + permission_args(profile)
+    cmd = [CONFIG["claude"], "-p", "--output-format", "stream-json", "--verbose", "--resume", sid] + code_mode_args(sid) + permission_args(profile)
     try:
         subprocess.run(cmd, cwd=cwd, env=profile_env(profile), input="/compact", capture_output=True, text=True, timeout=900)
     except subprocess.TimeoutExpired:
@@ -707,6 +707,28 @@ CODE_MODE_REFUSED = re.compile(r"started in Code Mode\b.*?can.t be resumed", re.
 CODE_MODE_HINT = ("This session was started in Code Mode (Claude Code's experimental mode), which only a terminal on "
                   "the Mac can continue: run `CLAUDE_CODE_EXPERIMENTAL_CODE_MODE=1 claude --resume` there. "
                   "To keep working from here, start a new session.")
+CODE_MODE_ON = '"type":"repl-mode","replMode":true'
+CODE_MODE_OFF = '"type":"repl-mode","replMode":false'
+
+
+def code_mode_args(sid):
+    """A session started in Code Mode (experimental) only resumes with Code Mode on — otherwise claude -p refuses it
+    ("error_during_execution" in the app). Its transcript keeps repl-mode lines; the newest one decides."""
+    t = next(PROJECTS.glob(f"*/{sid}.jsonl"), None) if sid else None
+    if not t:
+        return []
+    try:
+        with open(t, "rb") as fh:
+            fh.seek(max(0, t.stat().st_size - 4 * 1024 * 1024))
+            tail = fh.read().decode("utf-8", "replace")
+    except OSError:
+        return []
+    on, off = tail.rfind(CODE_MODE_ON), tail.rfind(CODE_MODE_OFF)
+    if on < 0 or off > on:
+        return []
+    return ["--settings", json.dumps({"env": {"CLAUDE_CODE_EXPERIMENTAL_CODE_MODE": "1"}})]
+
+
 BG_ID = re.compile(r"agentId: ([0-9a-z]+)|running in background with ID: ([0-9a-z]+)")
 BG_DONE = re.compile(r"<task-id>([0-9a-z]+)</task-id>")
 RESUMED = re.compile(r'"resumedAgentId":\s*"([0-9a-z]+)"')
@@ -728,6 +750,8 @@ def bg_tasks(path, since=0):
     and not yet reported done by a <task-notification>: their descriptions, newest last. Only meaningful while a claude
     for the session is alive (they die with it)."""
     desc, names, running, sends = {}, {}, {}, set()
+    if not path:
+        return []   # no transcript (yet): nothing running
     try:
         with open(path, "rb") as fh:
             for raw in fh:
@@ -2279,7 +2303,7 @@ def run_request(uid, rid, req):
         compacted = compact_session(uid, rid, sid, cwd, profile)
     cmd = [CONFIG["claude"], "-p", "--input-format", "stream-json", "--output-format", "stream-json", "--verbose"]
     if sid:
-        cmd += ["--resume", sid]
+        cmd += ["--resume", sid] + code_mode_args(sid)
     if fork or child:
         cmd += ["--fork-session"]  # side branch: same context, separate session, main history untouched
     elif sid and claude_has("--replay-user-messages"):
@@ -2511,6 +2535,8 @@ def run_request(uid, rid, req):
     elif seen["idle"] and not result_err:
         result_err = f"No reply from Claude for {CONFIG['idle_timeout'] // 60} min — the turn was stopped"
     err = result_err or (None if proc.returncode == 0 or cancelled else (proc.stderr.read()[-1500:] or f"exit {proc.returncode}"))
+    if err == "error_during_execution":   # the bare subtype says nothing: claude printed the reason on stderr
+        err = (proc.stderr.read()[-1500:].strip() or err)
     if err and CODE_MODE_REFUSED.search(err):
         err = CODE_MODE_HINT
         log("code mode session", (sid or "")[:8], "can't be resumed with -p")
