@@ -979,7 +979,7 @@ class Tunnel:
         return self.on_lan(ws, peer, headers.get("Tailscale-User-Login", ""))
 
     def advertise(self):
-        """Bonjour `_clo2._tcp` so the app finds this Mac on the same Wi-Fi without a QR. TXT carries the addresses
+        """Bonjour `_remotecc._tcp` (and the old `_clo2._tcp`) so the app finds this Mac on the same Wi-Fi without a QR. TXT carries the addresses
         (the app connects to them directly) and the Mac's public key prefix; nothing secret."""
         if os.environ.get("REMOTECC_NO_BONJOUR"):
             return
@@ -991,10 +991,13 @@ class Tunnel:
             watch = (reg + ' & d=$!; '
                      'while [ "$(ps -o ppid= -p $$ | tr -d " ")" = "%d" ] && kill -0 $d 2>/dev/null; do sleep 3; done; kill $d 2>/dev/null'
                      % os.getpid())   # our parent changed (re-parented to launchd) = the bridge is gone, even if not yet reaped
-            self.bonjour = subprocess.Popen(["/bin/bash", "-c", watch, "remotecc-bonjour", self.label, "_clo2._tcp", "local", str(self.lan_port), *txt],  # wire id — the iOS app depends on it
-                                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            # _remotecc._tcp = the new name (app 2.0.6+); _clo2._tcp stays until every installed app browses the new one.
+            procs = [subprocess.Popen(["/bin/bash", "-c", watch, "remotecc-bonjour", self.label, t, "local", str(self.lan_port), *txt],
+                                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) for t in ("_remotecc._tcp", "_clo2._tcp")]
+            self.bonjour = procs[0]
             import atexit
-            atexit.register(self.bonjour.terminate)
+            for pr in procs:
+                atexit.register(pr.terminate)
         except Exception as e:
             self.log("bonjour off:", e)
 

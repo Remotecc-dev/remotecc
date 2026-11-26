@@ -13,7 +13,7 @@ page.write_text("<!doctype html><title>t</title><h1>Xin chào artifact</h1>")
 r = tool("artifact", str(page), "--title", "Biểu đồ")
 link = r.stdout.strip()
 aid = link.rsplit("/", 1)[-1]
-check("remotecc-artifact prints a clo2:// link", link.startswith("clo2://artifact/") and r.returncode == 0, r.stderr)
+check("remotecc-artifact prints a remotecc:// link", link.startswith("remotecc://artifact/") and r.returncode == 0, r.stderr)
 got = a.op("artifact", aid=aid)
 check("phone loads the artifact through the tunnel", got.get("status") == 200 and "Xin chào artifact" in got["body"]["html"])
 lib = a.doc(f"clo/local/artifacts/{aid}")
@@ -33,7 +33,7 @@ check("remotecc-secret get", tool("secret", "get", "TEST_TOKEN").stdout == VALUE
 check("remotecc-secret list shows names, not values", "TEST_TOKEN" in tool("secret", "list").stdout and VALUE not in tool("secret", "list").stdout)
 r = tool("secret", "run", "TEST_TOKEN", "--", "sh", "-c", 'printf %s "$TEST_TOKEN" | wc -c')
 check("remotecc-secret run passes it as env", r.stdout.strip() == str(len(VALUE)), r.stderr)
-check("remotecc-secret ask prints the card link", "clo2-secret://ask?name=GH_TOKEN" in tool("secret", "ask", "GH_TOKEN", "--label", "GitHub").stdout)
+check("remotecc-secret ask prints the card link", "remotecc-secret://ask?name=GH_TOKEN" in tool("secret", "ask", "GH_TOKEN", "--label", "GitHub").stdout)
 check("reveal returns it to the paired phone", a.op("secret.reveal", name="TEST_TOKEN")["body"].get("value") == VALUE)
 check("bad name refused", a.op("secret.set", name="bad name!", value="x")["status"] == 400)
 

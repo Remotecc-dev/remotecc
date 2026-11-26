@@ -27,7 +27,7 @@ for f in $WEBFILES; do cp "public/$f" "public/bridge/web-$f"; FILES="$FILES web-
 git -C .. log -1 --format="%h %cs" > public/bridge/VERSION
 PY="${REMOTECC_PY:-$HOME/.remotecc/venv/bin/python}"
 SEQ="$(git -C .. rev-list --count HEAD)" VERSION="$(cat public/bridge/VERSION)" FILES="$FILES" \
-  clo-secret run REMOTECC_RELEASE_KEY -- "$PY" -I - <<'PY'
+  remotecc-secret run REMOTECC_RELEASE_KEY -- "$PY" -I - <<'PY'
 import base64, hashlib, json, os, pathlib
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 d = pathlib.Path("public/bridge")
@@ -85,7 +85,7 @@ PY
 cp install.sh public/install.sh
 # wrangler's own login expires: then deploy with the Cloudflare token from the vault (by name, never printed)
 if [[ -z "${CLOUDFLARE_API_TOKEN:-}" ]] && ! npx -y wrangler@4 whoami 2>/dev/null | grep -q "You are logged in"; then
-  CLOUDFLARE_API_TOKEN="$(clo-secret get CLOUDFLARE_SUPER_TOKEN)"; export CLOUDFLARE_API_TOKEN
+  CLOUDFLARE_API_TOKEN="$(remotecc-secret get CLOUDFLARE_SUPER_TOKEN)"; export CLOUDFLARE_API_TOKEN
 fi
 npx -y wrangler@4 deploy
 # IndexNow (Bing, Yandex, Seznam…; Bing feeds ChatGPT search): tell them the pages may have changed. Key file: public/b5efd5a0a4748a57a5940fe5bd2c4b80.txt

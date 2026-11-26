@@ -1,8 +1,8 @@
 """RemoteCC tools on this Mac (no cloud): artifacts and the secrets vault. Used by the bridge (tunnel ops) and as commands:
 
-  remotecc-artifact FILE.html --title "…" [--id ID]   → prints clo2://artifact/<id> (the app shows a live preview)
+  remotecc-artifact FILE.html --title "…" [--id ID]   → prints remotecc://artifact/<id> (the app shows a live preview)
   remotecc-secret list | get NAME | env NAME… | run NAME… -- cmd | ask NAME --label "…" | wait NAME
-  remotecc-secret import NAME [--label "…"] < value      (value from stdin, never printed; for moving a vault over)
+  remotecc-secret import NAME [--label "…"] < value      (alias: set; value from stdin, never printed)
 
 Secrets: one AES-256-GCM file (~/.remotecc/secrets.bin, 0600) whose key lives in this Mac's login Keychain (service
 "remotecc-secrets"). Values arrive from paired devices end-to-end encrypted, are never written to the store, logs or replies,
@@ -59,7 +59,7 @@ def artifact_save(path, title, aid=None):
     dest.write_bytes(html)
     os.chmod(dest, 0o600)
     _store().patch(f"clo/local/artifacts/{aid}", {k: _enc(v) for k, v in {  # wire id — the iOS app depends on it
-        "title": title or pathlib.Path(path).stem, "url": f"clo2://artifact/{aid}", "source": MACHINE,  # wire id — the iOS app depends on it
+        "title": title or pathlib.Path(path).stem, "url": f"remotecc://artifact/{aid}", "source": MACHINE,  # app 2.0.4+ and the web read remotecc:// (clo2:// still accepted)
         "size": len(html), "updatedAt": now()}.items()})
     return aid
 
@@ -169,7 +169,7 @@ def main(argv):
             else: files.append(a)
         if len(files) != 1 or not pathlib.Path(files[0]).is_file():
             raise SystemExit('Usage: remotecc-artifact FILE.html --title "…" [--id ID]')
-        print(f"clo2://artifact/{artifact_save(files[0], title, aid)}")
+        print(f"remotecc://artifact/{artifact_save(files[0], title, aid)}")
     elif cmd == "secret":
         if not args:
             raise SystemExit(__doc__)
@@ -205,9 +205,9 @@ def main(argv):
             if not NAME.match(name):
                 raise SystemExit("Secret name: letters, digits, _ (e.g. GITHUB_TOKEN)")
             from urllib.parse import urlencode
-            # wire id — the iOS app depends on it (it only recognises clo-secret:// / clo2-secret://ask)
-            print(f"`clo2-secret://ask?{urlencode({'name': name, 'label': label})}`")
-        elif sub == "import":
+            # app 2.0.4+ and the web read remotecc-secret://ask (older clo2-secret:// still parsed)
+            print(f"`remotecc-secret://ask?{urlencode({'name': name, 'label': label})}`")
+        elif sub in ("import", "set"):
             name = rest[0] if rest else ""
             label = rest[rest.index("--label") + 1] if "--label" in rest and rest.index("--label") + 1 < len(rest) else ""
             if not NAME.match(name):

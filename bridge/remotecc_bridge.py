@@ -326,10 +326,10 @@ def lookup_uid():  # wire id — the iOS app depends on it
     return "local"   # one owner per Mac: whoever paired their devices with it
 
 
-# wire id — the iOS app depends on it: the `clo2://artifact/…` link scheme and the `clo2.fetch` page API named below
+# The app (2.0.4+) and web read remotecc://artifact/… (clo2:// still accepted); the `clo2.fetch` page API name stays — pages use it
 ARTIFACT_HINT = ("The user reads this chat in the RemoteCC phone app or at remotecc.dev. When a visual or interactive result helps (report, chart, "
                  "dashboard, mockup, slides, mini app), write one self-contained HTML file (inline CSS/JS; CDN libraries ok) and run "
-                 "`remotecc-artifact FILE.html --title \"…\"`; put the printed clo2://artifact/… link on its own line in your reply — the app "
+                 "`remotecc-artifact FILE.html --title \"…\"`; put the printed remotecc://artifact/… link on its own line in your reply — the app "
                  "shows it as a live preview. To update, rerun with `--id <same id>`. This command IS your artifact tool: when the user "
                  "asks to show or open an HTML page here — including an existing .html file on this Mac — run it on that file and reply "
                  "with the link. Artifacts stay on this Mac; the app loads them through its encrypted connection. A page can call an "
@@ -4333,7 +4333,7 @@ def continue_after_secret(name):
     """A secret the user just saved from a `remotecc-secret ask` card → the Claude session that asked for it (its last reply
     holds the card and it isn't running) gets a turn telling it to carry on, so the user doesn't have to say "done"."""
     try:
-        card = re.compile(r"clo2-secret://ask\?name=" + re.escape(urllib.parse.quote_plus(name)) + r"(?:[&`\s]|$)")
+        card = re.compile(r"(?:remotecc|clo2?)-secret://ask\?name=" + re.escape(urllib.parse.quote_plus(name)) + r"(?:[&`\s]|$)")
         uid, cutoff = lookup_uid(), time.time() - 86400
         files = sorted(((p.stat().st_mtime, p) for p in PROJECTS.glob("*/*.jsonl")), reverse=True)[:60]
         for mtime, path in files:
