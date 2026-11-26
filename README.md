@@ -154,7 +154,7 @@ node --check relay/src/relay.js
 ## Contributing
 
 Issues and pull requests are welcome. Keep the wire protocol (`docs/PROTOCOL.md`) backward compatible: the shipped iPhone
-app depends on it (`clo2://` links, `clo2-lan` key info, relay paths). Run the tests before sending a PR.
+app depends on it (key-derivation labels, op names, relay paths). Run the tests before sending a PR.
 
 ## Licence
 

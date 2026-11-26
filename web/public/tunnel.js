@@ -41,7 +41,7 @@ export async function checkCode(macPubRaw, devPubRaw) {
 }
 
 export function parseQR(text) {
-  // clo2://pair?d=… (QR / copied link; wire id — the iOS app depends on it) · https://remotecc.dev/#pair=… · #pair=…
+  // https://remotecc.dev/?d=… (QR) · remotecc://pair?d=… (copied link) · https://remotecc.dev/#pair=… · #pair=…
   const t = String(text || "").trim();
   const m = t.match(/[?&#](?:pair|d)=([A-Za-z0-9_-]+)/);
   if (!m) return null;

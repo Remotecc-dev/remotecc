@@ -50,7 +50,7 @@ check("checkout serves web/public/i18n.js", s == 200 and h["Content-Type"].start
 class T:
     pairing = {"exp": 9e12}
     label = "Test"
-    def qr(self): return "clo2://pair?d=abc"
+    def qr(self): return "remotecc://pair?d=abc"
     def start_pairing(self): pass
     def state(self): return {}
 pairpage.serve(T(), 7473, log=lambda *a: None, local_web=7471)

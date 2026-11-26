@@ -457,7 +457,7 @@ class Tunnel:
             payload["a"] = self.pairing["auto"]
         # https://remotecc.dev/?d=…: the iPhone Camera app opens it in the browser (web pairs at once), and the iOS app's
         # scanner / paste field reads the `d` query item of any URL (wire id — the iOS app depends on `d`). The web also
-        # still accepts clo2://pair?d=… and #pair=….
+        # accepts remotecc://pair?d=… and #pair=….
         return f"{self.web}/?d=" + b64u(json.dumps(payload, separators=(",", ":")).encode())
 
     def start_pairing(self):
@@ -979,7 +979,7 @@ class Tunnel:
         return self.on_lan(ws, peer, headers.get("Tailscale-User-Login", ""))
 
     def advertise(self):
-        """Bonjour `_remotecc._tcp` (and the old `_clo2._tcp`) so the app finds this Mac on the same Wi-Fi without a QR. TXT carries the addresses
+        """Bonjour `_remotecc._tcp` so the app finds this Mac on the same Wi-Fi without a QR. TXT carries the addresses
         (the app connects to them directly) and the Mac's public key prefix; nothing secret."""
         if os.environ.get("REMOTECC_NO_BONJOUR"):
             return
@@ -991,13 +991,10 @@ class Tunnel:
             watch = (reg + ' & d=$!; '
                      'while [ "$(ps -o ppid= -p $$ | tr -d " ")" = "%d" ] && kill -0 $d 2>/dev/null; do sleep 3; done; kill $d 2>/dev/null'
                      % os.getpid())   # our parent changed (re-parented to launchd) = the bridge is gone, even if not yet reaped
-            # _remotecc._tcp = the new name (app 2.0.6+); _clo2._tcp stays until every installed app browses the new one.
-            procs = [subprocess.Popen(["/bin/bash", "-c", watch, "remotecc-bonjour", self.label, t, "local", str(self.lan_port), *txt],
-                                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) for t in ("_remotecc._tcp", "_clo2._tcp")]
-            self.bonjour = procs[0]
+            self.bonjour = subprocess.Popen(["/bin/bash", "-c", watch, "remotecc-bonjour", self.label, "_remotecc._tcp", "local", str(self.lan_port), *txt],
+                                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             import atexit
-            for pr in procs:
-                atexit.register(pr.terminate)
+            atexit.register(self.bonjour.terminate)
         except Exception as e:
             self.log("bonjour off:", e)
 

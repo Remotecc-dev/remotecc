@@ -142,7 +142,7 @@ node --check relay/src/relay.js
 
 ## コントリビューション
 
-Issue や Pull Request を歓迎します。リリース済みの iPhone アプリが依存しているため、通信プロトコル（`docs/PROTOCOL.md`）の後方互換性（`clo2://` リンク、`clo2-lan` 鍵情報、リレーパス）を維持してください。PR を送る前にテストを実行してください。
+Issue や Pull Request を歓迎します。リリース済みの iPhone アプリが依存しているため、通信プロトコル（`docs/PROTOCOL.md`）の後方互換性（鍵導出ラベル、操作名、リレーパス）を維持してください。PR を送る前にテストを実行してください。
 
 ## ライセンス
 

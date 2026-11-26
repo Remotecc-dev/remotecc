@@ -142,7 +142,7 @@ node --check relay/src/relay.js
 
 ## Contribuer
 
-Les issues et pull requests sont les bienvenues. Préservez la rétrocompatibilité du protocole réseau (`docs/PROTOCOL.md`) : l'app iPhone publiée en dépend (liens `clo2://`, informations de clé `clo2-lan`, chemins du relais). Lancez les tests avant d'ouvrir une PR.
+Les issues et pull requests sont les bienvenues. Préservez la rétrocompatibilité du protocole réseau (`docs/PROTOCOL.md`) : l'app iPhone publiée en dépend (libellés de dérivation de clés, noms d’opérations, chemins du relay). Lancez les tests avant d'ouvrir une PR.
 
 ## Licence
 

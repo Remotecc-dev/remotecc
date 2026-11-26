@@ -32,7 +32,9 @@ systemd user service on Linux). Never type the user's passwords; let them type i
 - Access level: Standard (edits files, refuses scripts/installs/network) or Full access (`--dangerously-skip-permissions`).
   Never switch to Full access unless the user explicitly asks: `remotecc settings access full`.
 - Show a result on the phone: `remotecc-artifact FILE.html --title "…"` publishes a self-contained HTML page; put the
-  printed `clo2://artifact/…` link on its own line in your reply — the app and web show a live preview.
+  printed `remotecc://artifact/…` link on its own line in your reply — the app and web show a live preview.
+- Send a file (photo, video, audio, PDF, zip…, max 500 MB) into the chat: `remotecc-send FILE`; put the printed
+  `remotecc://media/…` link on its own line — images show inline, video/audio play, other files open or save.
 - Secrets the user keeps in RemoteCC: `remotecc-secret list` (names only). Use one without printing it:
   `remotecc-secret run NAME -- cmd`. Never echo, log or commit a value.
 

@@ -13,8 +13,7 @@ const py = (code, input = "") => execFileSync(PY, ["-I", "-c", `import sys; sys.
 
 test("parseQR: QR link, web fragment, junk", () => {
   const d = b64u(new TextEncoder().encode(JSON.stringify({ v: 1, r: "relay", room: "room1", k: "key", c: "code", n: "Mac của Leo" })));
-  // clo2:// is a wire id — the iOS app depends on it
-  for (const t of [`clo2://pair?d=${d}`, `https://remotecc.dev/#pair=${d}`, `https://remotecc.dev/?d=${d}`, `#pair=${d}`, `  clo2://pair?d=${d}  `]) assert.equal(parseQR(t)?.n, "Mac của Leo", t);
+  for (const t of [`remotecc://pair?d=${d}`, `https://remotecc.dev/#pair=${d}`, `https://remotecc.dev/?d=${d}`, `#pair=${d}`, `  remotecc://pair?d=${d}  `]) assert.equal(parseQR(t)?.n, "Mac của Leo", t);
   assert.equal(parseQR("https://example.com/?x=1"), null);
   assert.equal(parseQR("#pair=!!!"), null);
 });

@@ -31,7 +31,7 @@ try:
     T.open_frame(T.session_key(wrong, s["devPub"]), s["frame"]); check("wrong Mac key can't open", False)
 except Exception:
     check("wrong Mac key can't open", True)
-qr = "clo2://pair?d=" + T.b64u(json.dumps({"v": 1, "r": "relay.remotecc.dev", "room": "abc_-123", "k": ident["pub"], "c": "code-_x", "n": "Mac của Leo"}).encode())
+qr = "remotecc://pair?d=" + T.b64u(json.dumps({"v": 1, "r": "relay.remotecc.dev", "room": "abc_-123", "k": ident["pub"], "c": "code-_x", "n": "Mac của Leo"}).encode())
 p = sw("parse", qr)
 check("swift parses QR", p["ok"] and p["k"] == ident["pub"] and p["n"] == "Mac của Leo" and p["c"] == "code-_x")
 check("swift rejects junk QR", sw("parse", "https://example.com/?d=zzz")["ok"] is False)

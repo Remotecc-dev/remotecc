@@ -1,6 +1,7 @@
 """RemoteCC tools on this Mac (no cloud): artifacts and the secrets vault. Used by the bridge (tunnel ops) and as commands:
 
   remotecc-artifact FILE.html --title "…" [--id ID]   → prints remotecc://artifact/<id> (the app shows a live preview)
+  remotecc-send FILE [--title "…"]                     → prints remotecc://media/<id> (photo/video/audio/file right in the chat)
   remotecc-secret list | get NAME | env NAME… | run NAME… -- cmd | ask NAME --label "…" | wait NAME
   remotecc-secret import NAME [--label "…"] < value      (alias: set; value from stdin, never printed)
 
@@ -28,6 +29,9 @@ import localstore  # noqa: E402
 DIR = pathlib.Path(os.environ.get("REMOTECC_DIR") or pathlib.Path.home() / ".remotecc")
 STORE = os.environ.get("REMOTECC_STORE") or str(DIR / "store.db")
 ARTIFACTS = DIR / "artifacts"
+MEDIA = DIR / "media"
+MEDIA_MAX = 500 * 1024 * 1024
+MEDIA_CHUNK = 1024 * 1024
 VAULT = DIR / "secrets.bin"
 NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,63}$")
 SAFE_ID = re.compile(r"^[A-Za-z0-9_-]{6,40}$")
@@ -59,7 +63,7 @@ def artifact_save(path, title, aid=None):
     dest.write_bytes(html)
     os.chmod(dest, 0o600)
     _store().patch(f"clo/local/artifacts/{aid}", {k: _enc(v) for k, v in {  # wire id — the iOS app depends on it
-        "title": title or pathlib.Path(path).stem, "url": f"remotecc://artifact/{aid}", "source": MACHINE,  # app 2.0.4+ and the web read remotecc:// (clo2:// still accepted)
+        "title": title or pathlib.Path(path).stem, "url": f"remotecc://artifact/{aid}", "source": MACHINE,
         "size": len(html), "updatedAt": now()}.items()})
     return aid
 
@@ -69,6 +73,43 @@ def artifact_html(aid):
         return None
     f = ARTIFACTS / f"{aid}.html"
     return f.read_text(errors="replace") if f.exists() else None
+
+
+# ---------------------------------------------------------------- media (files sent into the chat)
+def media_save(path, title=""):
+    """Copy FILE to ~/.remotecc/media/<id> (+ <id>.json: name, mime, size); the app/web fetch it in chunks (tunnel op media)."""
+    import mimetypes
+    src = pathlib.Path(path)
+    size = src.stat().st_size
+    if size > MEDIA_MAX:
+        raise SystemExit("File too large (max 500 MB)")
+    mid = b64u(_rand.token_bytes(12))
+    MEDIA.mkdir(parents=True, exist_ok=True, mode=0o700)
+    dest = MEDIA / mid
+    shutil.copyfile(src, dest)
+    os.chmod(dest, 0o600)
+    mime = mimetypes.guess_type(src.name)[0] or "application/octet-stream"
+    meta = {"name": src.name[:200], "mime": mime, "size": size, "title": title or "", "createdAt": now()}
+    (MEDIA / f"{mid}.json").write_text(json.dumps(meta))
+    os.chmod(MEDIA / f"{mid}.json", 0o600)
+    return mid
+
+
+def media_read(mid, offset=0, length=MEDIA_CHUNK):
+    """→ (meta, bytes from offset) or None. length is capped at 1 MB per call."""
+    if not SAFE_ID.match(mid or ""):
+        return None
+    f, m = MEDIA / mid, MEDIA / f"{mid}.json"
+    if not f.is_file() or not m.is_file():
+        return None
+    meta = json.loads(m.read_text())
+    try:
+        offset, length = max(0, int(offset or 0)), max(1, min(int(length or MEDIA_CHUNK), MEDIA_CHUNK))
+    except (TypeError, ValueError):
+        return None
+    with open(f, "rb") as fh:
+        fh.seek(offset)
+        return meta, fh.read(length)
 
 
 # ---------------------------------------------------------------- secrets vault
@@ -170,6 +211,16 @@ def main(argv):
         if len(files) != 1 or not pathlib.Path(files[0]).is_file():
             raise SystemExit('Usage: remotecc-artifact FILE.html --title "…" [--id ID]')
         print(f"remotecc://artifact/{artifact_save(files[0], title, aid)}")
+    elif cmd == "send":
+        title, files = "", []
+        it = iter(args)
+        for a in it:
+            if a == "--title": title = next(it, "")
+            else: files.append(a)
+        if not files or not all(pathlib.Path(p).is_file() for p in files):
+            raise SystemExit('Usage: remotecc-send FILE… [--title "…"]')
+        for p in files:
+            print(f"remotecc://media/{media_save(p, title)}")
     elif cmd == "secret":
         if not args:
             raise SystemExit(__doc__)
@@ -205,7 +256,6 @@ def main(argv):
             if not NAME.match(name):
                 raise SystemExit("Secret name: letters, digits, _ (e.g. GITHUB_TOKEN)")
             from urllib.parse import urlencode
-            # app 2.0.4+ and the web read remotecc-secret://ask (older clo2-secret:// still parsed)
             print(f"`remotecc-secret://ask?{urlencode({'name': name, 'label': label})}`")
         elif sub in ("import", "set"):
             name = rest[0] if rest else ""

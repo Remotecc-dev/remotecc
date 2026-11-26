@@ -34,7 +34,7 @@ CONFIG = {
     "port": 7790,
     "lan_port": 7789,          # direct path for phones on the same network (0 = relay only)
     "local_web": 7791,         # the web app served from this computer: http://127.0.0.1:7791 (0 = off; remotecc.dev always works)
-    "ts_web": 7781,            # web app over Tailscale HTTPS (tailscale serve :8444 → 127.0.0.1:ts_web; 0 = off). Not 7779: CLO 2 uses that
+    "ts_web": 7781,            # web app over Tailscale HTTPS (tailscale serve :8444 → 127.0.0.1:ts_web; 0 = off). Not 7779 (taken by another tool)
     "self_update": False,      # git checkouts: fast-forward from the upstream (owner's Macs; off by default)
     "auto_update": True,       # one-line installs (~/.remotecc/app): signed releases from remotecc.dev
     "update_every": 3600,
@@ -273,7 +273,7 @@ def push_summary(reply):
         if t.startswith("```"):
             code = not code
             continue
-        if code or t.startswith(("🔧", "|", ">", "clo2://", "remotecc://", "🖼")):
+        if code or t.startswith(("🔧", "|", ">", "remotecc://", "`remotecc://", "🖼")):
             if para:
                 break
             continue
@@ -326,17 +326,20 @@ def lookup_uid():  # wire id — the iOS app depends on it
     return "local"   # one owner per Mac: whoever paired their devices with it
 
 
-# The app (2.0.4+) and web read remotecc://artifact/… (clo2:// still accepted); the `clo2.fetch` page API name stays — pages use it
 ARTIFACT_HINT = ("The user reads this chat in the RemoteCC phone app or at remotecc.dev. When a visual or interactive result helps (report, chart, "
                  "dashboard, mockup, slides, mini app), write one self-contained HTML file (inline CSS/JS; CDN libraries ok) and run "
                  "`remotecc-artifact FILE.html --title \"…\"`; put the printed remotecc://artifact/… link on its own line in your reply — the app "
                  "shows it as a live preview. To update, rerun with `--id <same id>`. This command IS your artifact tool: when the user "
                  "asks to show or open an HTML page here — including an existing .html file on this Mac — run it on that file and reply "
                  "with the link. Artifacts stay on this Mac; the app loads them through its encrypted connection. A page can call an "
-                 "API with a key from the RemoteCC vault without the key ever being in the page: `await clo2.fetch(\"https://api…\", "
+                 "API with a key from the RemoteCC vault without the key ever being in the page: `await remotecc.fetch(\"https://api…\", "
                  "{method, headers, body, secret: \"NAME\"})` sends `Authorization: Bearer <NAME>`; or put `{{secret:NAME}}` where "
                  "the key goes (header, URL, body string). The Mac adds the key and makes the call (https only, no redirects); it "
-                 "returns a normal Response. The user approves each page × secret × host once on the phone.")
+                 "returns a normal Response. The user approves each page × secret × host once on the phone. "
+                 "To hand the user a file — photo, video, audio, PDF, zip… (up to 500 MB) — run `remotecc-send FILE` and put the "
+                 "printed remotecc://media/… link on its own line: the app and web show it right in the chat (image inline, video "
+                 "and audio play, other files open/save). Use this instead of Telegram or e-mail when the user asks to send them "
+                 "something.")
 
 NOTIFY_HINT = (" End every reply with one last line `⤷ <summary>`: at most ~120 characters, in the user's language — what you "
                "did and, if anything, what the user needs to do next. Their phone shows that line as the notification.")
@@ -3783,6 +3786,7 @@ def link_tools():
     bindir.mkdir(parents=True, exist_ok=True)
     env = f'REMOTECC_DIR="{tunnel_mod.DIR}" REMOTECC_STORE="{CONFIG["store"]}"'
     tools = {"remotecc-artifact": f'{env} exec "{sys.executable}" -I "{BRIDGE_DIR / "remotecc_tools.py"}" artifact "$@"',
+             "remotecc-send": f'{env} exec "{sys.executable}" -I "{BRIDGE_DIR / "remotecc_tools.py"}" send "$@"',
              "remotecc-secret": f'{env} exec "{sys.executable}" -I "{BRIDGE_DIR / "remotecc_tools.py"}" secret "$@"',
              "remotecc-resume": f'exec "{sys.executable}" -I "{BRIDGE_DIR / "remotecc-resume"}" "$@"',
              "remotecc": f'REMOTECC_PAGE="http://127.0.0.1:{CONFIG["port"]}" exec "{sys.executable}" -I "{BRIDGE_DIR / "remotecc_cli.py"}" "$@"'}
@@ -4313,6 +4317,15 @@ def op_artifact(req, dev):
     return (200, {"html": html}) if html is not None else (404, {"error": "This artifact isn't on this Mac"})
 
 
+def op_media(req, dev):
+    """A file Claude sent into the chat (remotecc-send): {mid, offset, length} → {name, mime, size, title, offset, data(b64)}."""
+    r = remotecc_tools.media_read(str(req.get("mid") or ""), req.get("offset") or 0, req.get("length") or remotecc_tools.MEDIA_CHUNK)
+    if r is None:
+        return 404, {"error": "This file isn't on this Mac"}
+    meta, data = r
+    return 200, {**meta, "data": base64.b64encode(data).decode()}
+
+
 def op_secret_set(req, dev):
     try:
         remotecc_tools.secret_set(str(req.get("name") or ""), req.get("value"), str(req.get("label") or ""))
@@ -4333,7 +4346,7 @@ def continue_after_secret(name):
     """A secret the user just saved from a `remotecc-secret ask` card → the Claude session that asked for it (its last reply
     holds the card and it isn't running) gets a turn telling it to carry on, so the user doesn't have to say "done"."""
     try:
-        card = re.compile(r"(?:remotecc|clo2?)-secret://ask\?name=" + re.escape(urllib.parse.quote_plus(name)) + r"(?:[&`\s]|$)")
+        card = re.compile(r"remotecc-secret://ask\?name=" + re.escape(urllib.parse.quote_plus(name)) + r"(?:[&`\s]|$)")
         uid, cutoff = lookup_uid(), time.time() - 86400
         files = sorted(((p.stat().st_mtime, p) for p in PROJECTS.glob("*/*.jsonl")), reverse=True)[:60]
         for mtime, path in files:
@@ -4724,7 +4737,7 @@ def op_bundle_get(req, dev):
     return 200, {"file": f.name, "html": base64.b64encode(html).decode(), "manifest": base64.b64encode(manifest).decode(), "sig": sig}
 
 
-TUNNEL_OPS = {"upload": op_upload, "artifact": op_artifact, "secret.set": op_secret_set,
+TUNNEL_OPS = {"upload": op_upload, "artifact": op_artifact, "media": op_media, "secret.set": op_secret_set,
               "secret.delete": op_secret_delete, "secret.reveal": op_secret_reveal, "secret.fetch": op_secret_fetch,
               "memory.projects": op_memory_projects, "memory.files": op_memory_files, "memory.write": op_memory_write,
               "memory.delete": op_memory_delete, "memory.dreams": op_memory_dreams, "memory.undo": op_memory_undo,

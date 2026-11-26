@@ -71,8 +71,8 @@ export class Room {
     if (rl.n >= PUSH_PER_HOUR) return mac.send(JSON.stringify({ op: "pushResult", token: m.token, status: 429 }));
     rl.n++; await s.put("rl", rl);
     let payload, type, topic;
-    // The phone app's bundle id (it registered with it): the CLO 2 app shipped as com.leo.clo2 (TestFlight) and as the
-    // AI PDF record's com.leo.pdfstudio (App Store). Anything else falls back to the first.
+    // The phone app's bundle id (it registered with it): com.leo.pdfstudio (App Store) or com.leo.clo2 (test builds).
+    // Anything else falls back to the first.
     const app = APPS.includes(m.app) ? m.app : APPS[0];
     const now = Math.floor(Date.now() / 1000);
     if (m.op === "push") {

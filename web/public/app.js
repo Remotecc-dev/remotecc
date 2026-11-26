@@ -113,10 +113,10 @@ function askConnect(name) {
   return new Promise((resolve) => {
     $("pair-confirm-name").textContent = name || "Mac";
     $("pair-confirm").classList.remove("hidden"); showStatus();
-    // iPhone/iPad with the app: hand the same link to it (clo2:// opens RemoteCC; every app build reads it)
+    // iPhone/iPad with the app: hand the same link to it (remotecc:// opens RemoteCC)
     const d = $("pair-link").value.match(/[?&#](?:pair=|d=)([A-Za-z0-9_-]+)/)?.[1];
     $("pair-app").classList.toggle("hidden", !(d && /iPhone|iPad/.test(navigator.userAgent)));
-    if (d) $("pair-app").href = "clo2://pair?d=" + d;
+    if (d) $("pair-app").href = "remotecc://pair?d=" + d;
     const done = (ok) => { $("pair-confirm").classList.add("hidden"); resolve(ok); };
     $("pair-yes").onclick = () => done(true); $("pair-no").onclick = () => done(false);
   });
@@ -170,7 +170,7 @@ try {   // the name typed before this list existed
 } catch {}
 $("signin").onclick = pairNow;
 // Scan the Mac's pairing QR with this device's camera (phones, laptops). BarcodeDetector where the browser has it
-// (Chrome/Edge/Android), else jsQR on canvas frames (Safari/iOS, Firefox). The QR holds the same clo2://pair link as
+// (Chrome/Edge/Android), else jsQR on canvas frames (Safari/iOS, Firefox). The QR holds the same pairing link as
 // "Copy pairing link", so it then pairs exactly like a pasted link (4-digit check on the Mac).
 const qrScan = { stream: null, timer: 0 };
 function qrStop() {
@@ -1263,8 +1263,8 @@ function secretDialog({ name = "", label = "", kind = "", existing = false, onDo
   (name ? f.elements.value : f.elements.name).focus();
 }
 
-// `remotecc-secret ask NAME` prints clo2-secret://ask?name=…&label=… (wire id — the iOS app depends on it; remotecc-secret:// also accepted): Claude needs a secret → secure input card instead of pasting in chat.
-const SECRET_ASK = /`?(?:remotecc|clo2?)-secret:\/\/ask\?([^\s`]+)`?/g;
+// `remotecc-secret ask NAME` prints remotecc-secret://ask?name=…&label=…: Claude needs a secret → secure input card instead of pasting in chat.
+const SECRET_ASK = /`?remotecc-secret:\/\/ask\?([^\s`]+)`?/g;
 function secretCards(n, text) {
   for (const m of (text || "").matchAll(SECRET_ASK)) {
     const q = new URLSearchParams(m[1]), name = q.get("name") || "";
@@ -1404,7 +1404,7 @@ function messageNode(m) {
   const imgs = S.images.get(m.id);
   if (imgs?.length) { const w = el("div", "imgs"); imgs.forEach((src) => { const i = el("img"); i.src = src; w.append(i); }); n.append(w); }
   if (m.role === "user") { if (m.text) n.append(el("div", "bubble", m.text)); }
-  else { n.append(markdown(m.text)); artifactCards(n, m.text); }
+  else { n.append(markdown(m.text)); artifactCards(n, m.text); mediaCards(n, m.text); }
   const a = el("div", "actions");
   a.append(ibtn("copy", (b) => copy(m.text, b), "Chép"));
   a.append(ibtn("pin", () => updateDoc(doc(db, `clo/${S.uid}/messages/${m.id}`), { pinned: !m.pinned, editedAt: now() }), m.pinned ? "Bỏ ghim" : "Ghim", m.pinned ? "on" : ""));
@@ -1541,9 +1541,8 @@ function requestNode(r) {
   return n;
 }
 
-// RemoteCC artifacts live on the Mac (clo2://artifact/<id>): the HTML comes through the tunnel into a sandboxed iframe.
-// wire id — the iOS app depends on it (clo2://artifact/…)
-const ARTIFACT = /(?:clo2|remotecc):\/\/artifact\/[A-Za-z0-9_-]{6,40}/g;   // remotecc:// once every app build reads it (app build 67+)
+// RemoteCC artifacts live on the Mac (remotecc://artifact/<id>): the HTML comes through the tunnel into a sandboxed iframe.
+const ARTIFACT = /remotecc:\/\/artifact\/[A-Za-z0-9_-]{6,40}/g;
 const artifactHtml = new Map();
 async function artifactSource(url) {
   const aid = url.split("/").pop();
@@ -1566,6 +1565,45 @@ function artifactCards(n, text) {
     const bar = el("div", "artifact-bar", "Artifact");
     const right = el("span"); right.append(btn("Mở tab mới", () => openArtifactTab(url), "link"));
     bar.append(right); card.append(frame, bar); n.append(card);
+  }
+}
+
+// Files Claude sent into the chat (`remotecc-send FILE` → remotecc://media/<id>): fetched from the Mac in 1 MB chunks
+// (tunnel op media), then shown inline — image, video/audio player, or a download link.
+const MEDIA = /remotecc:\/\/media\/[A-Za-z0-9_-]{6,40}/g;
+const mediaBlobs = new Map();
+function mediaSource(mid, progress) {
+  if (!mediaBlobs.has(mid)) mediaBlobs.set(mid, (async () => {
+    const parts = []; let off = 0, meta = null;
+    do {
+      const r = await tunnel.op("media", { mid, offset: off, length: 1048576 }, 120_000);
+      meta = r; const bin = atob(r.data || ""); const u8 = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      if (!u8.length) break;
+      parts.push(u8); off += u8.length; progress?.(off, r.size);
+    } while (off < meta.size);
+    return { ...meta, data: undefined, url: URL.createObjectURL(new Blob(parts, { type: meta.mime })) };
+  })().catch((e) => { mediaBlobs.delete(mid); throw e; }));
+  return mediaBlobs.get(mid);
+}
+const fmtSize = (b) => b >= 1048576 ? (b / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b / 1024)) + " KB";
+function mediaCards(n, text) {
+  for (const url of new Set((text || "").match(MEDIA) || [])) {
+    const mid = url.split("/").pop(), card = el("div", "artifact media");
+    const status = el("div", "artifact-bar", EN ? "Loading from the Mac…" : "Đang tải từ Mac…");
+    card.append(status); n.append(card);
+    mediaSource(mid, (got, size) => { status.textContent = (EN ? "Loading " : "Đang tải ") + fmtSize(got) + " / " + fmtSize(size); }).then((m) => {
+      const kind = (m.mime || "").split("/")[0];
+      let view = null;
+      if (kind === "image") { view = el("img"); view.src = m.url; view.alt = m.name; view.style.cssText = "display:block;max-width:100%;max-height:520px;margin:auto;cursor:zoom-in"; view.onclick = () => window.open(m.url, "_blank", "noopener"); }
+      else if (kind === "video") { view = el("video"); view.src = m.url; view.controls = true; view.playsInline = true; view.style.cssText = "display:block;width:100%;max-height:520px;background:#000"; }
+      else if (kind === "audio") { view = el("audio"); view.src = m.url; view.controls = true; view.style.cssText = "display:block;width:100%;padding:8px 0"; }
+      status.textContent = "";
+      status.append(el("span", "", (m.title || m.name) + " · " + fmtSize(m.size)));
+      const a = el("a", "link", EN ? "Save" : "Tải về"); a.href = m.url; a.download = m.name;
+      const right = el("span"); right.append(a); status.append(right);
+      if (view) card.insertBefore(view, status);
+    }).catch((e) => { status.textContent = "⚠︎ " + e.message; });
   }
 }
 
@@ -1632,6 +1670,7 @@ function turnNode(role, text, cost) {
   flush();
   for (const t of [...n.querySelectorAll(":scope > .term")]) collapseTerm(t);
   artifactCards(n, text);
+  mediaCards(n, text);
   secretCards(n, text);
   const plain = (text || "").split("\n").filter((l) => !l.startsWith("🔧 ") && !l.startsWith("🖼 ")).join("\n").trim();
   if (plain || cost > 0) {

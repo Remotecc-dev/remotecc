@@ -142,7 +142,7 @@ node --check relay/src/relay.js
 
 ## 参与贡献
 
-欢迎提交 Issue 和 Pull Request。请保持通信协议（`docs/PROTOCOL.md`）向后兼容，因为已发布的 iPhone 应用依赖这些约定（`clo2://` 链接、`clo2-lan` 密钥信息、中继路径）。提交 PR 前请先运行测试。
+欢迎提交 Issue 和 Pull Request。请保持通信协议（`docs/PROTOCOL.md`）向后兼容，因为已发布的 iPhone 应用依赖这些约定（密钥派生标签、操作名称、中继路径）。提交 PR 前请先运行测试。
 
 ## 许可证
 

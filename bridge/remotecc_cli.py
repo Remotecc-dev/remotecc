@@ -1,7 +1,6 @@
 """`remotecc` — RemoteCC on this Mac, from Terminal (talks to the running bridge on 127.0.0.1 only).
 
-  remotecc pair [--app]         show a QR code here; scan it with a phone camera, remotecc.dev or the RemoteCC iPhone app
-                            (--app: a clo2:// code for app versions before build 68)
+  remotecc pair                 show a QR code here; scan it with a phone camera, remotecc.dev or the RemoteCC iPhone app
   remotecc status               connection, settings, paired devices
   remotecc web [--online]       open the web app: served by this computer (http://127.0.0.1:7791), or remotecc.dev
   remotecc devices              paired devices · remotecc revoke NAME|ID  removes one
@@ -44,7 +43,7 @@ WARN_ACCESS = """
 SKILL_TEXT = f"""---
 name: remotecc
 description: RemoteCC (formerly RemoteCC) — the user drives Claude Code on this Mac from their phone/browser. Use when the user mentions RemoteCC or RemoteCC,
-  pairing a phone, artifacts (clo2://artifact links), the secrets vault (remotecc-secret), or who/what can access this Mac.
+  pairing a phone, artifacts (remotecc://artifact links), files sent into the chat (remotecc-send), the secrets vault (remotecc-secret), or who/what can access this Mac.
 ---
 {MARK}
 # RemoteCC on this Mac
@@ -59,8 +58,10 @@ The user may be reading this session in the RemoteCC iPhone app (phone) or web a
 - `remotecc uninstall`
 
 ## Showing results on the phone
-- `remotecc-artifact FILE.html --title "…"` publishes a self-contained HTML page; put the printed `clo2://artifact/…` link on
+- `remotecc-artifact FILE.html --title "…"` publishes a self-contained HTML page; put the printed `remotecc://artifact/…` link on
   its own line in the reply — the app shows a live preview. Rerun with `--id <id>` to update.
+- `remotecc-send FILE` sends a photo, video, audio clip or any file (max 500 MB) into the chat; put the printed
+  `remotecc://media/…` link on its own line — images show inline, video/audio play, other files open or save.
 
 ## Secrets
 - `remotecc-secret list` shows names only. Use a value without printing it: `X=$(remotecc-secret get NAME) cmd`,
@@ -130,7 +131,7 @@ def qr_text(link):
     return out.getvalue()
 
 
-def cmd_pair(app=False):
+def cmd_pair():
     s = state()
     before = {d["id"] for d in s["devices"]}
     api("/api/pair/start", {})
@@ -140,14 +141,10 @@ def cmd_pair(app=False):
     if not link:
         sys.exit("Couldn't start pairing — is RemoteCC online on this computer? (remotecc status)")
     print(f"\nPair a phone or browser with {s.get('label') or 'this computer'}\n")
-    if app:   # RemoteCC builds before 68 only scan clo2:// codes
-        link = "clo2://pair?d=" + link.split("d=", 1)[1]
     q = qr_text(link)
     print(q if q else "(QR needs the segno package — use the link below instead)")
     print(f"  Pairing link (paste it on https://remotecc.dev → “With a pairing link”):\n  {link}\n")
     print("  iPhone: open RemoteCC on the iPhone → Scan QR code (or the Camera app). Scanning this code pairs at once.")
-    if not app:
-        print("  The app says nothing when it scans this? It's an older version: run `remotecc pair --app` for a code it reads.")
     print("  Same Wi-Fi / Tailscale: pick this computer in the app or on remotecc.dev, then type the 4-digit code in the dialog here.")
     print("  ⚠️  A paired device can run Claude Code on this computer as you. Only pair devices you own.\n")
     print("Waiting… (Ctrl-C to stop; the code expires in 5 minutes)")
@@ -286,7 +283,7 @@ def cmd_web(args):
 def main(argv):
     cmd, args = (argv[0] if argv else "help"), argv[1:]
     if cmd == "pair":
-        cmd_pair(app="--app" in args)
+        cmd_pair()
     elif cmd == "web":
         cmd_web(args)
     elif cmd == "status":
