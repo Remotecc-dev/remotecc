@@ -2,6 +2,7 @@
 
   remotecc-artifact FILE.html --title "…" [--id ID]   → prints clo2://artifact/<id> (the app shows a live preview)
   remotecc-secret list | get NAME | env NAME… | run NAME… -- cmd | ask NAME --label "…" | wait NAME
+  remotecc-secret import NAME [--label "…"] < value      (value from stdin, never printed; for moving a vault over)
 
 Secrets: one AES-256-GCM file (~/.remotecc/secrets.bin, 0600) whose key lives in this Mac's login Keychain (service
 "remotecc-secrets"). Values arrive from paired devices end-to-end encrypted, are never written to the store, logs or replies,
@@ -206,6 +207,21 @@ def main(argv):
             from urllib.parse import urlencode
             # wire id — the iOS app depends on it (it only recognises clo-secret:// / clo2-secret://ask)
             print(f"`clo2-secret://ask?{urlencode({'name': name, 'label': label})}`")
+        elif sub == "import":
+            name = rest[0] if rest else ""
+            label = rest[rest.index("--label") + 1] if "--label" in rest and rest.index("--label") + 1 < len(rest) else ""
+            if not NAME.match(name):
+                raise SystemExit("Secret name: letters, digits, _ (e.g. GITHUB_TOKEN)")
+            if sys.stdin.isatty():
+                raise SystemExit("Pipe the value in: other-vault get NAME | remotecc-secret import NAME")
+            v = sys.stdin.read(64 * 1024 + 2)
+            if v.endswith("\n"):
+                v = v[:-1]
+            try:
+                secret_set(name, v, label)
+            except ValueError:
+                raise SystemExit("Empty value or longer than 64 KB")
+            print(f"imported {name}")
         elif sub == "wait":
             name = rest[0] if rest else ""
             for _ in range(600):
