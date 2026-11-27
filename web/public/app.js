@@ -1587,11 +1587,19 @@ function mediaSource(mid, progress) {
   return mediaBlobs.get(mid);
 }
 const fmtSize = (b) => b >= 1048576 ? (b / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b / 1024)) + " KB";
-function mediaCards(n, text) {
+// A line holding only the link (as Claude is told to write it): the card goes right there, not after the whole reply.
+const MEDIA_LINE = /^[`<]?remotecc:\/\/media\/([A-Za-z0-9_-]{6,40})[`>]?$/;
+function mediaCards(n, text, placed = new Set()) {
   for (const url of new Set((text || "").match(MEDIA) || [])) {
-    const mid = url.split("/").pop(), card = el("div", "artifact media");
+    const mid = url.split("/").pop();
+    if (!placed.has(mid)) n.append(mediaCard(mid));
+  }
+}
+function mediaCard(mid) {
+  {
+    const card = el("div", "artifact media");
     const status = el("div", "artifact-bar", EN ? "Loading from the Mac…" : "Đang tải từ Mac…");
-    card.append(status); n.append(card);
+    card.append(status);
     mediaSource(mid, (got, size) => { status.textContent = (EN ? "Loading " : "Đang tải ") + fmtSize(got) + " / " + fmtSize(size); }).then((m) => {
       const kind = (m.mime || "").split("/")[0];
       let view = null;
@@ -1604,6 +1612,7 @@ function mediaCards(n, text) {
       const right = el("span"); right.append(a); status.append(right);
       if (view) card.insertBefore(view, status);
     }).catch((e) => { status.textContent = "⚠︎ " + e.message; });
+    return card;
   }
 }
 
@@ -1663,14 +1672,17 @@ function turnNode(role, text, cost) {
   for (const l of lines.filter((x) => x.startsWith("🔧 "))) termLine(n, l);
   let prose = [];
   const flush = () => { if (prose.join("").trim()) n.append(markdown(prose.join("\n"))); prose = []; };
+  const placed = new Set();
   for (const line of (text || "").split("\n")) {
-    if (line.startsWith("🖼 ")) { flush(); n.append(agentImage(line.split(" ")[1])); }
+    const mm = line.trim().match(MEDIA_LINE);
+    if (mm) { flush(); if (!placed.has(mm[1])) { placed.add(mm[1]); n.append(mediaCard(mm[1])); } }
+    else if (line.startsWith("🖼 ")) { flush(); n.append(agentImage(line.split(" ")[1])); }
     else if (!line.startsWith("🔧 ")) prose.push(line.replace(SECRET_ASK, "").trimEnd());
   }
   flush();
   for (const t of [...n.querySelectorAll(":scope > .term")]) collapseTerm(t);
   artifactCards(n, text);
-  mediaCards(n, text);
+  mediaCards(n, text, placed);   // links inside a sentence: after the reply
   secretCards(n, text);
   const plain = (text || "").split("\n").filter((l) => !l.startsWith("🔧 ") && !l.startsWith("🖼 ")).join("\n").trim();
   if (plain || cost > 0) {
